@@ -35,11 +35,17 @@ const ACT = {
   },
   sort(el) {
     const key = el.dataset.key;
-    if (list.sort === key) list.dir *= -1; else { list.sort = key; list.dir = 1; }
-    refreshList();
+    const state = listCtl.state;
+    if (state.sort === key) state.dir *= -1; else { state.sort = key; state.dir = 1; }
+    listCtl.refresh();
     $(`[data-act="sort"][data-key="${key}"]`).focus();
   },
-  page(el) { list.page += Number(el.dataset.d); refreshList(); $('#view').scrollTop = 0; },
+  page(el) {
+    listCtl.state.page += Number(el.dataset.d);
+    listCtl.refresh();
+    const scroller = $('.detail-scroll') || $('#view');
+    scroller.scrollTop = 0;
+  },
   'row-menu'(el) { openMenu(el, firmMenuItems(firmById(el.dataset.id), false)); },
   'detail-menu'(el) { openMenu(el, firmMenuItems(firmById(el.dataset.id), true)); },
   restore(el) { restoreFirm(el.dataset.id); },
@@ -139,10 +145,11 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('contextmenu', e => {
-  const row = e.target.closest('tr[data-id]');
+  const row = e.target.closest('tr[data-id], tr[data-inst]');
   if (!row) return;
   e.preventDefault();
-  openMenu(row, firmMenuItems(firmById(row.dataset.id), false), { left: e.clientX, top: e.clientY });
+  const items = row.dataset.inst ? instrumentMenuItems(instrumentById(row.dataset.inst), false) : firmMenuItems(firmById(row.dataset.id), false);
+  openMenu(row, items, { left: e.clientX, top: e.clientY });
 });
 
 document.addEventListener('input', e => {
@@ -156,7 +163,7 @@ document.addEventListener('input', e => {
   if (!form || t.closest('#sheet') || !t.dataset.field) return;
   const k = t.dataset.field;
   if (t.type === 'checkbox') return;
-  form.draft[k] = t.value;
+  setPath(form.draft, k, t.value);
   if (k === 'id') form.idTouched = true;
   if (k === 'name' && form.mode === 'create' && !form.idTouched) {
     form.draft.id = slug(t.value);
@@ -183,20 +190,28 @@ document.addEventListener('change', e => {
   if (t.id === 'typeFilter') { list.type = t.value; list.page = 0; refreshList(); return; }
   if (t.id === 'stateFilter') { list.state = t.value; list.page = 0; refreshList(); return; }
   if (t.id === 'showDeleted') { list.deleted = t.checked; list.page = 0; refreshList(); return; }
-  if (t.id === 'pageSize') { list.size = Number(t.value); list.page = 0; refreshList(); $('#pageSize').focus(); return; }
+  if (t.id === 'pageSize') {
+    listCtl.state.size = Number(t.value);
+    listCtl.state.page = 0;
+    listCtl.refresh();
+    $('#pageSize').focus();
+    return;
+  }
   if (!form || t.closest('#sheet')) return;
   if (!t.dataset.field) return;
   const k = t.dataset.field;
-  if (t.type === 'checkbox') {
-    form.draft[k] = t.checked;
-    if (k === 'skipRiskAndCurrencyChecks') { refreshFormBody(`#firm-${k}`); return; }
-  } else if (t.tagName === 'SELECT') {
-    form.draft[k] = t.value;
-    if (k === 'type') {
-      delete form.errors.type;
-      refreshFormBody('#firm-type');
-      return;
-    }
+  if (t.type === 'checkbox') setPath(form.draft, k, t.checked);
+  else if (t.tagName === 'SELECT') setPath(form.draft, k, t.value);
+  if (form.module) {
+    if (form.module.onChange) form.module.onChange(k);
+    updateDock();
+    return;
+  }
+  if (t.type === 'checkbox' && k === 'skipRiskAndCurrencyChecks') { refreshFormBody(`#firm-${k}`); return; }
+  if (t.tagName === 'SELECT' && k === 'type') {
+    delete form.errors.type;
+    refreshFormBody('#firm-type');
+    return;
   }
   updateDock();
 });

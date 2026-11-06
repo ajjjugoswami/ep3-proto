@@ -59,7 +59,7 @@ function validateEntity() {
   const errors = {};
   entity.fields.forEach(x => {
     const v = draft[x.k];
-    if (x.req && !String(v ?? '').trim()) errors[x.k] = x.kind === 'select' ? `Choose ${x.label.toLowerCase()}.` : `Enter ${x.label.toLowerCase()}.`;
+    if (x.req && !String(v ?? '').trim()) errors[x.k] = requiredMessage(x);
     if (x.inputType === 'number' && !isEmpty(v) && !(Number(v) >= 0)) errors[x.k] = `${x.label} must be 0 or more.`;
   });
   if (mode === 'create' && !errors.id && entityRows(entity.kind, f, entity.sid).some(r => r.id === String(draft.id).trim())) {

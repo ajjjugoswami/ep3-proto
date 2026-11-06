@@ -36,10 +36,11 @@ function startSpy() {
 }
 
 function readValue(x, f) {
+  if (x.display) return x.display(f);
   if (x.kind === 'static') return x.value;
   if (x.kind === 'type') return TYPES[f.type].label;
   if (x.kind === 'select' && x.k === 'state') return STATES[f.state] || f.state;
-  return f[x.k];
+  return getPath(f, x.k);
 }
 
 function readRow(x, f) {
@@ -53,7 +54,7 @@ function readRow(x, f) {
   const v = readValue(x, f);
   return `<div class="row">
     <span class="row-label">${esc(x.label)}</span>
-    ${isEmpty(v) ? `<span class="row-value unset">Not set</span>` : `<span class="row-value ${x.mono ? 'mono' : ''}">${esc(v)}</span>`}
+    ${isEmpty(v) ? `<span class="row-value unset" data-mirror="${esc(x.k)}">Not set</span>` : `<span class="row-value ${x.mono ? 'mono' : ''}" data-mirror="${esc(x.k)}">${esc(v)}</span>`}
   </div>`;
 }
 

@@ -1,6 +1,6 @@
 # EP3 Admin prototype
 
-Static prototype of the EP3 admin firms flow. No build step and no backend: sample data is stored in the browser.
+Static prototype of the EP3 admin firms and instruments flows. No build step and no backend: sample data is stored in the browser.
 
 ## Pages
 
@@ -13,6 +13,13 @@ Static prototype of the EP3 admin firms flow. No build step and no backend: samp
 | `firm-edit.html?id=` | Edit a firm |
 | `user.html`, `account.html`, `service.html` | View a record (`?firm=&id=`), add one (`&mode=new`) or edit one (`&mode=edit`) |
 | `api-keys.html`, `api-key.html` | A service's API keys |
+| `instruments.html` | Instrument list |
+| `instrument.html?id=` | View an instrument, or add, edit or copy one (`&mode=new`, `edit`, `copy`) |
+| `instrument-state.html?id=` | Change state, EOD actions and resolution (`?ids=` takes a JSON array) |
+| `instrument-stats.html?id=`, `instrument-history.html?id=` | Market stats and history |
+| `books.html?instrumentId=` | Limit and stop book |
+| `products.html`, `product.html?id=` | Products |
+| `calendars.html` | Holiday calendars |
 
 Shared code is in `assets/`.
 

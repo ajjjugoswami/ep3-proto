@@ -28,6 +28,10 @@ function renderRecordPage(kind, f, sid) {
 }
 
 function renderPage() {
+  if (MARKET_PAGES.includes(PAGE)) {
+    renderMarketPage();
+    return;
+  }
   if (PAGE === 'firms') {
     renderList();
     return;

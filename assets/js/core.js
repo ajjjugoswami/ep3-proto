@@ -32,9 +32,16 @@ let spyLock = 0;
 let assocState = null;
 let firstList = session.get('listShown') !== '1';
 const list = { q: '', type: '', state: '', deleted: false, sort: 'seed', dir: 1, page: 0, size: 10, ...readSaved('firmsList') };
+let listCtl = { state: list, refresh: () => refreshList() };
 
 const persist = () => storage.set(STORE_KEY, JSON.stringify(firms));
 const clone = o => JSON.parse(JSON.stringify(o));
+const getPath = (o, path) => String(path).split('.').reduce((v, key) => (v === undefined || v === null ? undefined : v[key]), o);
+const setPath = (o, path, value) => {
+  const keys = String(path).split('.');
+  const last = keys.pop();
+  keys.reduce((v, key) => v[key], o)[last] = value;
+};
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];

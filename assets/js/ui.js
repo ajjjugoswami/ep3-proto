@@ -62,6 +62,7 @@ function openMenu(anchor, items, at) {
     b.setAttribute('role', 'menuitem');
     b.tabIndex = -1;
     if (it.danger) b.className = 'danger';
+    if (it.disabled) { b.disabled = true; b.title = it.reason || ''; }
     b.innerHTML = `${icon(it.icon)}<span>${esc(it.label)}</span>`;
     b.addEventListener('click', () => { closeMenu(); it.run(); });
     m.append(b);
@@ -74,9 +75,9 @@ function openMenu(anchor, items, at) {
   const top = below + r.height > innerHeight - 8 ? Math.max(8, (at ? at.top : rect.top - 6) - r.height) : below;
   m.style.left = `${left}px`;
   m.style.top = `${top}px`;
-  $('button', m).focus();
+  $('button:not(:disabled)', m).focus();
   m.addEventListener('keydown', e => {
-    const btns = $$('button', m);
+    const btns = $$('button:not(:disabled)', m);
     const i = btns.indexOf(document.activeElement);
     if (e.key === 'ArrowDown') { e.preventDefault(); btns[(i + 1) % btns.length].focus(); }
     if (e.key === 'ArrowUp') { e.preventDefault(); btns[(i - 1 + btns.length) % btns.length].focus(); }
@@ -204,6 +205,7 @@ function enhanceSelects() {
       if (sel.hasAttribute(attr)) btn.setAttribute(attr, sel.getAttribute(attr));
     });
     btn.innerHTML = `<span class="select-value"></span>${icon('chevrons')}`;
+    btn.disabled = sel.disabled;
     sel.dataset.enhanced = '1';
     sel.classList.remove('field');
     sel.classList.add('select-native');

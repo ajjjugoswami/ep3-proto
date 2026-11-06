@@ -201,11 +201,12 @@ const ENTITIES = {
 };
 
 const NAV = [
-  { label: 'Directory', items: [['Firms', 'building', true], ['Users', 'users'], ['Accounts', 'card'], ['Groups', 'group']] },
-  { label: 'Markets', items: [['Instruments', 'list'], ['Time & Sales', 'calendar'], ['Order Search', 'search'], ['RFQ Search', 'quote']] },
+  { label: 'Directory', items: [['Firms', 'building', 'firms.html'], ['Users', 'users'], ['Accounts', 'card'], ['Groups', 'group']] },
+  { label: 'Markets', items: [['Instruments', 'list', 'instruments.html'], ['Time & Sales', 'calendar'], ['Order Search', 'search'], ['RFQ Search', 'quote']] },
   { label: 'Operations', items: [['Admin Requests', 'check'], ['Jobs', 'terminal'], ['Alerts', 'bell']] },
   { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal', false, 'license']] },
 ];
+const MARKET_PAGES = ['instruments', 'instrument', 'instrument-state', 'instrument-stats', 'instrument-history', 'books', 'products', 'product', 'calendars'];
 const APP_INFO = {
   appVersion: 'v0.5.6-7b97fe0',
   client: 'Connamara Integrations Env',

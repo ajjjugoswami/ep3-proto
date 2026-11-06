@@ -1,22 +1,48 @@
 'use strict';
 
+const tipHTML = text => (text ? `<span class="tip" title="${esc(text)}" role="img" aria-label="${esc(text)}">i</span>` : '');
+
+function partsControlHTML(x, values, id) {
+  const off = x.disabled ? 'disabled' : '';
+  return `<div class="parts parts-${x.parts.length}" role="group" aria-labelledby="${id}-label">${x.parts.map(p => {
+    const value = getPath(values, p.k);
+    if (p.type === 'check') {
+      return `<label class="day-chip"><input type="checkbox" data-field="${p.k}" ${value ? 'checked' : ''} ${off}><span>${esc(p.label)}</span></label>`;
+    }
+    const control = p.options
+      ? `<select class="field" id="${id}-${p.k}" data-field="${p.k}" aria-label="${esc(p.label)}" ${off}><option value=""></option>${p.options.map(o => `<option value="${esc(o)}" ${String(value ?? '') === String(o) ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+      : `<input class="field" id="${id}-${p.k}" data-field="${p.k}" type="number" min="0" value="${esc(value ?? '')}" aria-label="${esc(p.label)}" autocomplete="off" ${off}>`;
+    return `<span class="part"><span class="part-label">${esc(p.label)}</span>${control}</span>`;
+  }).join('')}</div>`;
+}
+
 function fieldRow(x, values, errors, ctx) {
   const id = `${ctx}-${x.k}`;
+  const value = getPath(values, x.k);
   const err = errors[x.k];
   const errEl = err ? `<div class="row-err" id="${id}-err">${icon('warn')}<span>${esc(err)}</span></div>` : '';
   const reqTag = x.req ? '<span class="req">Required</span>' : '';
   const help = x.help ? `<span class="row-help" id="${id}-help">${esc(x.help)}</span>` : '';
   const described = [err ? `${id}-err` : '', x.help ? `${id}-help` : ''].filter(Boolean).join(' ');
-  const aria = `${described ? `aria-describedby="${described}"` : ''} ${err ? 'aria-invalid="true"' : ''} ${x.req ? 'aria-required="true"' : ''}`;
+  const off = x.disabled ? 'disabled' : '';
+  const aria = `${described ? `aria-describedby="${described}"` : ''} ${err ? 'aria-invalid="true"' : ''} ${x.req ? 'aria-required="true"' : ''} ${off}`;
 
   if (x.kind === 'toggle') {
-    const warn = x.k === 'skipRiskAndCurrencyChecks' && form && form.original.skipRiskAndCurrencyChecks && !values[x.k]
+    const warn = x.k === 'skipRiskAndCurrencyChecks' && form && !form.module && form.original.skipRiskAndCurrencyChecks && !value
       ? `<div class="row-warn" id="riskWarn">${icon('warn')}<span>After turning risk checks back on, restart the Position Risk Server. Until then, Pre-Trade Risk checks for this firm may be incorrect.</span></div>` : '';
     return `<div class="row row-toggle" id="row-${id}">
-      <label class="row-label" for="${id}">${esc(x.label)}</label>
+      <label class="row-label" for="${id}">${esc(x.label)}${tipHTML(x.tip)}</label>
       ${help}
-      <span class="switch"><input id="${id}" data-field="${x.k}" type="checkbox" role="switch" ${values[x.k] ? 'checked' : ''} ${aria}><span></span></span>
+      <span class="switch"><input id="${id}" data-field="${x.k}" type="checkbox" role="switch" ${value ? 'checked' : ''} ${aria}><span></span></span>
       ${warn}${errEl ? `<div class="row-help">${errEl}</div>` : ''}
+    </div>`;
+  }
+
+  if (x.kind === 'parts') {
+    return `<div class="row" id="row-${id}">
+      <span class="row-label" id="${id}-label">${esc(x.label)}${reqTag}${tipHTML(x.tip)}</span>
+      <div>${partsControlHTML(x, values, id)}${errEl}</div>
+      ${help}
     </div>`;
   }
 
@@ -25,16 +51,18 @@ function fieldRow(x, values, errors, ctx) {
     const list2 = x.options.map(o => typeof o === 'string' ? { value: o, label: o } : o);
     control = `<select class="field" id="${id}" data-field="${x.k}" ${aria}>
       ${x.blank !== undefined ? `<option value="">${esc(x.blank)}</option>` : ''}
-      ${list2.map(o => `<option value="${esc(o.value)}" ${String(values[x.k] ?? '') === String(o.value) ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+      ${list2.map(o => `<option value="${esc(o.value)}" ${String(value ?? '') === String(o.value) ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
     </select>`;
+  } else if (x.kind === 'textarea') {
+    control = `<textarea class="field" id="${id}" data-field="${x.k}" rows="3" ${aria}>${esc(value ?? '')}</textarea>`;
   } else {
-    control = `<input class="field ${x.mono ? 'mono' : ''}" id="${id}" data-field="${x.k}" type="${x.inputType || 'text'}" value="${esc(values[x.k] ?? '')}"
-      ${x.ph ? `placeholder="${esc(x.ph)}"` : ''} ${x.auto ? `autocomplete="${x.auto}"` : 'autocomplete="off"'} ${x.min !== undefined ? `min="${x.min}"` : ''}
+    control = `<input class="field ${x.mono ? 'mono' : ''}" id="${id}" data-field="${x.k}" type="${x.inputType || 'text'}" value="${esc(value ?? '')}"
+      ${x.ph ? `placeholder="${esc(x.ph)}"` : ''} ${x.auto ? `autocomplete="${x.auto}"` : 'autocomplete="off"'} ${x.min !== undefined ? `min="${x.min}"` : ''} ${x.list ? `list="${x.list}"` : ''}
       ${x.mono || x.k === 'name' ? 'spellcheck="false"' : ''} ${aria}>`;
   }
-  const lei = x.kind === 'lei' ? `<span class="meter ${leiWarn(values[x.k]) ? 'warn' : ''}" id="leiMeter">${leiText(values[x.k])}</span>` : '';
-  return `<div class="row" id="row-${id}">
-    <label class="row-label" for="${id}">${esc(x.label)}${reqTag}</label>
+  const lei = x.kind === 'lei' ? `<span class="meter ${leiWarn(value) ? 'warn' : ''}" id="leiMeter">${leiText(value)}</span>` : '';
+  return `<div class="row ${x.wide ? 'row-wide' : ''}" id="row-${id}">
+    <label class="row-label" for="${id}">${esc(x.label)}${reqTag}${tipHTML(x.tip)}</label>
     <div>${control}${lei}${errEl}</div>
     ${help}
   </div>`;
@@ -82,6 +110,7 @@ const FIRM_FORM_ORDER = [
 ];
 
 const firmFieldByKey = key => SECTIONS.flatMap(s => s.fields || []).find(x => x.k === key);
+const requiredMessage = x => (x.kind === 'select' || x.kind === 'multi' ? `Choose ${x.label.toLowerCase()}.` : `Enter ${x.label.toLowerCase()}.`);
 
 function formCollapseHTML(s) {
   const rows = form.draft[s.collection] || [];
@@ -99,6 +128,7 @@ function formCollapseHTML(s) {
 
 function formBodyHTML() {
   const f = form.draft;
+  if (form.module) return form.module.body();
   if (form.entity) {
     return `<div class="card form-card"><div class="form-grid form-list">${form.entity.fields.map(x => formFieldRow(x, f)).join('')}</div></div>`;
   }
@@ -111,11 +141,12 @@ function formBodyHTML() {
     ${SECTIONS.filter(s => s.collection).map(formCollapseHTML).join('')}`;
 }
 
-function dockHTML(backHref, saveLabel) {
+function dockHTML(backHref, saveLabel, extra = '') {
   form.saveLabel = saveLabel;
   return `<div class="dock">
     <div class="dock-acts">
       <button class="btn btn-primary" type="submit" id="saveBtn">${esc(saveLabel)}</button>
+      ${extra}
       <a class="btn btn-plain" href="${esc(backHref)}">Cancel</a>
     </div>
     <span class="dock-status" id="dockStatus"></span>
@@ -194,28 +225,33 @@ function validateFirm(f, mode) {
 }
 
 function showFieldError(k) {
-  const row = $(`#row-firm-${k}`);
-  const input = $(`#firm-${k}`);
+  const byId = suffix => document.getElementById(`firm-${k}${suffix}`);
+  const row = document.getElementById(`row-firm-${k}`);
+  const input = byId('');
   if (!row || !input) return;
   const err = form.errors[k];
-  const existing = $(`#firm-${k}-err`);
+  const existing = byId('-err');
   if (existing) existing.remove();
   if (err) {
     input.setAttribute('aria-invalid', 'true');
     input.insertAdjacentHTML('afterend', `<div class="row-err" id="firm-${k}-err">${icon('warn')}<span>${esc(err)}</span></div>`);
-    const help = $(`#firm-${k}-help`);
+    const help = byId('-help');
     input.setAttribute('aria-describedby', [`firm-${k}-err`, help ? `firm-${k}-help` : ''].filter(Boolean).join(' '));
   } else {
     input.removeAttribute('aria-invalid');
-    const help = $(`#firm-${k}-help`);
+    const help = byId('-help');
     if (help) input.setAttribute('aria-describedby', `firm-${k}-help`); else input.removeAttribute('aria-describedby');
   }
 }
 
-const validateForm = () => (form.entity ? validateEntity() : validateFirm(form.draft, form.mode));
+const validateForm = () => {
+  if (form.module) return form.module.validate();
+  return form.entity ? validateEntity() : validateFirm(form.draft, form.mode);
+};
 
 async function submitFirm() {
   if (form.saving) return;
+  if (form.module) { form.module.submit(); return; }
   if (form.entity) { submitEntity(); return; }
   const creating = form.mode === 'create';
   if (!creating && !isDirty()) return;
@@ -248,71 +284,69 @@ function collectionTarget() {
   return firmById(currentDetailId());
 }
 
-function openRecordSheet(key, index) {
-  const c = COLLECTIONS[key];
-  const owner = collectionTarget();
-  const rows = owner[key] || (owner[key] = []);
-  const editing = index !== null;
-  const values = editing ? clone(rows[index]) : Object.fromEntries(c.fields.filter(x => x.def !== undefined).map(x => [x.k, x.def]));
+function openFormSheet({ title, submit, note, fields, values, validate, onSubmit, repaintOn = [], sync }) {
   const d = $('#sheet');
   let errors = {};
-  let opener = document.activeElement;
+  const opener = document.activeElement;
+  const fieldList = () => (typeof fields === 'function' ? fields(values) : fields).filter(x => visible(x, values));
 
   const paint = () => {
+    d.classList.remove('sheet-wide');
     d.innerHTML = `<form class="sheet-form" novalidate>
       <div class="sheet-head">
-        <h2 id="sheetTitle">${editing ? `Edit ${esc(c.one)}` : `Add ${esc(c.one)}`}</h2>
+        <h2 id="sheetTitle">${esc(title)}</h2>
         <div class="dock-acts">
           <button class="btn btn-plain" type="button" data-sheet-cancel>Cancel</button>
-          <button class="btn btn-primary" type="submit">${editing ? 'Save' : 'Add'}</button>
+          <button class="btn btn-primary" type="submit" data-sheet-submit>${esc(submit)}</button>
         </div>
       </div>
       <div class="sheet-body">
-        ${c.note ? `<p class="sheet-note">${esc(c.note)}</p>` : ''}
-        <div class="card">${c.fields.map(x => fieldRow(x, values, errors, 'rec')).join('')}</div>
+        ${note ? `<p class="sheet-note">${esc(note)}</p>` : ''}
+        <div class="card">${fieldList().map(x => fieldRow(x, values, errors, 'rec')).join('')}</div>
       </div>
     </form>`;
     $('[data-sheet-cancel]', d).addEventListener('click', () => d.close());
-    $('.sheet-form', d).addEventListener('submit', onSubmit);
-    const applyLocks = () => c.fields.forEach(x => {
-      const el = x.lockedBy && $(`#rec-${x.k}`, d);
-      if (el) el.disabled = !!values[x.lockedBy];
-    });
+    $('.sheet-form', d).addEventListener('submit', onFormSubmit);
+    const applyLocks = () => {
+      fieldList().forEach(x => {
+        const el = x.lockedBy && document.getElementById(`rec-${x.k}`);
+        if (el) el.disabled = !!values[x.lockedBy];
+      });
+      if (sync) sync(values, d);
+    };
     $$('[data-field]', d).forEach(inp => {
-      const sync = () => { values[inp.dataset.field] = inp.type === 'checkbox' ? inp.checked : inp.value; applyLocks(); };
-      inp.addEventListener('input', sync);
-      inp.addEventListener('change', sync);
+      const update = () => { values[inp.dataset.field] = inp.type === 'checkbox' ? inp.checked : inp.value; applyLocks(); };
+      inp.addEventListener('input', update);
+      inp.addEventListener('change', () => {
+        update();
+        if (repaintOn.includes(inp.dataset.field)) {
+          paint();
+          const again = document.getElementById(`rec-${inp.dataset.field}`);
+          if (again) again.focus();
+        }
+      });
     });
     applyLocks();
   };
 
-  const onSubmit = async e => {
+  const onFormSubmit = e => {
     e.preventDefault();
     errors = {};
-    c.fields.forEach(x => {
+    fieldList().forEach(x => {
       const v = values[x.k];
       if (x.req && !String(v ?? '').trim()) errors[x.k] = `Enter ${x.label.toLowerCase()}.`;
       if (x.inputType === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) errors[x.k] = 'Enter an email address like name@example.com.';
       if (x.inputType === 'number' && v !== '' && v !== undefined && !(Number(v) >= 0)) errors[x.k] = `${x.label} must be 0 or more.`;
     });
-    if (!Object.keys(errors).length && c.validate) errors = c.validate(values);
+    if (!Object.keys(errors).length && validate) errors = validate(values);
     if (Object.keys(errors).length) {
       paint();
-      const first = $(`#rec-${Object.keys(errors)[0]}`, d);
+      const first = document.getElementById(`rec-${Object.keys(errors)[0]}`);
       if (first) first.focus();
       return;
     }
-    if (editing) rows[index] = values; else rows.push(values);
     d.close();
-    if (form) {
-      refreshFormBody(`[data-act="rec-add"][data-col="${key}"]`);
-    } else {
-      persist();
-      route();
-      const add = $(`[data-act="rec-add"][data-col="${key}"]`);
-      if (add) add.focus({ preventScroll: true });
-      toast(editing ? `Saved ${recordLabel(c, values)}.` : `Added ${recordLabel(c, values)}.`);
-    }
+    onSubmit(values);
   };
 
   paint();
@@ -320,6 +354,33 @@ function openRecordSheet(key, index) {
   const firstField = $('[data-field]', d);
   if (firstField) firstField.focus();
   d.addEventListener('close', () => { if (opener && opener.isConnected) opener.focus({ preventScroll: true }); }, { once: true });
+}
+
+function openRecordSheet(key, index) {
+  const c = COLLECTIONS[key];
+  const owner = collectionTarget();
+  const rows = owner[key] || (owner[key] = []);
+  const editing = index !== null;
+  openFormSheet({
+    title: editing ? `Edit ${c.one}` : `Add ${c.one}`,
+    submit: editing ? 'Save' : 'Add',
+    note: c.note,
+    fields: c.fields,
+    values: editing ? clone(rows[index]) : Object.fromEntries(c.fields.filter(x => x.def !== undefined).map(x => [x.k, x.def])),
+    validate: c.validate,
+    onSubmit: values => {
+      if (editing) rows[index] = values; else rows.push(values);
+      if (form) {
+        refreshFormBody(`[data-act="rec-add"][data-col="${key}"]`);
+        return;
+      }
+      persist();
+      route();
+      const add = $(`[data-act="rec-add"][data-col="${key}"]`);
+      if (add) add.focus({ preventScroll: true });
+      toast(editing ? `Saved ${recordLabel(c, values)}.` : `Added ${recordLabel(c, values)}.`);
+    },
+  });
 }
 
 async function removeRecord(key, index) {

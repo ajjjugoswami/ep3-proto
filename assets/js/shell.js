@@ -3,6 +3,7 @@
 function renderSidebar() {
   const min = document.body.classList.contains('side-min');
   const pref = themePref();
+  const currentNav = MARKET_PAGES.includes(PAGE) ? 'instruments.html' : 'firms.html';
   $('#sidebar').innerHTML = `
     <div class="side-head">
       <div class="brand">${logo('logo')}<div class="brand-text"><strong>Admin</strong><span>Connamara</span></div></div>
@@ -12,8 +13,8 @@ function renderSidebar() {
       ${NAV.map(g => `
         <div class="side-group">
           <div class="side-label">${esc(g.label)}</div>
-          ${g.items.map(([label, ic, live, act]) => live
-            ? `<a class="nav-item" href="firms.html" aria-current="page" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></a>`
+          ${g.items.map(([label, ic, href, act]) => href
+            ? `<a class="nav-item" href="${esc(href)}" ${href === currentNav ? 'aria-current="page"' : ''} title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></a>`
             : `<button class="nav-item" type="button" data-act="${act || 'nav-soon'}" data-label="${esc(label)}" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}${act === 'license' ? `<small class="nav-sub">Expires ${esc(licenseExpiry(APP_INFO.expires))}</small>` : ''}</span></button>`).join('')}
         </div>`).join('')}
     </div>

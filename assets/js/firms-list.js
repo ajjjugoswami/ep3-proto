@@ -150,8 +150,26 @@ function refreshChrome() {
 }
 
 function sortHeader(key, label, cls = '') {
-  const on = list.sort === key;
-  return `<th class="${cls}" ${on ? `aria-sort="${list.dir > 0 ? 'ascending' : 'descending'}"` : ''}><button type="button" data-act="sort" data-key="${key}">${label}${icon('up')}</button></th>`;
+  const { sort, dir } = listCtl.state;
+  const on = sort === key;
+  return `<th class="${cls}" ${on ? `aria-sort="${dir > 0 ? 'ascending' : 'descending'}"` : ''}><button type="button" data-act="sort" data-key="${key}">${label}${icon('up')}</button></th>`;
+}
+
+function pagerHTML(total) {
+  const { page, size } = listCtl.state;
+  const pages = Math.max(1, Math.ceil(total / size));
+  const start = page * size;
+  return `<div class="pager">
+    <span>${start + 1}–${Math.min(start + size, total)} of ${total}</span>
+    <div class="pager-actions">
+      <label><span class="sr">Rows per page</span>
+        <select class="field" id="pageSize">${[10, 25, 50].map(n => `<option value="${n}" ${size === n ? 'selected' : ''}>${n} rows</option>`).join('')}</select>
+      </label>
+      <button class="icon-btn" type="button" data-act="page" data-d="-1" aria-label="Previous Page" ${page === 0 ? 'disabled' : ''}>${icon('back')}</button>
+      <span>${page + 1} of ${pages}</span>
+      <button class="icon-btn flip" type="button" data-act="page" data-d="1" aria-label="Next Page" ${page >= pages - 1 ? 'disabled' : ''}><svg class="i" aria-hidden="true" transform="rotate(180)"><use href="#i-back"/></svg></button>
+    </div>
+  </div>`;
 }
 
 function refreshList() {
@@ -174,17 +192,7 @@ function refreshList() {
       <thead><tr>${sortHeader('name', 'Name')}${sortHeader('id', 'Firm ID', 'hide-compact')}${sortHeader('type', 'Type', 'hide-compact')}${sortHeader('state', 'State')}<th class="acts"><span class="sr">Actions</span></th></tr></thead>
       <tbody>${pageRows.map(rowHTML).join('')}</tbody>
     </table>
-    <div class="pager">
-      <span>${start + 1}–${Math.min(start + list.size, rows.length)} of ${rows.length}</span>
-      <div class="pager-actions">
-        <label><span class="sr">Rows per page</span>
-          <select class="field" id="pageSize">${[10, 25, 50].map(n => `<option value="${n}" ${list.size === n ? 'selected' : ''}>${n} rows</option>`).join('')}</select>
-        </label>
-        <button class="icon-btn" type="button" data-act="page" data-d="-1" aria-label="Previous Page" ${list.page === 0 ? 'disabled' : ''}>${icon('back')}</button>
-        <span>${list.page + 1} of ${pages}</span>
-        <button class="icon-btn flip" type="button" data-act="page" data-d="1" aria-label="Next Page" ${list.page >= pages - 1 ? 'disabled' : ''}><svg class="i" aria-hidden="true" transform="rotate(180)"><use href="#i-back"/></svg></button>
-      </div>
-    </div>`;
+    ${pagerHTML(rows.length)}`;
 }
 
 function rowHTML(f) {
