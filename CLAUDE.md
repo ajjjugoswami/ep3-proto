@@ -82,6 +82,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 - **List state:** save filters, sort and page with `saveListState` and read them with `readListState`. They stay until the user resets them or logs off, including after closing the tab.
 - **Links:** build URLs with `hrefFor`, `entityBase`, `entityHref` and `entityNewHref`.
 - **Toasts across pages:** call `toast()` around `go()`. It is saved and shown on the next page.
+- **Back and Cancel on edit pages:** use `editBack`, which returns to the list if that's where the user came from, and to the view page otherwise. `core.js` tracks the previous page in session storage.
 - **Unsaved changes:** forms use `form.draft` and `isDirty()`. Leaving a dirty form asks first.
 - **Data:** firms are stored in `localStorage` under `STORE_KEY`, and products, instruments and calendars under `MARKET_KEY`. Bump the version in `config.js` or `market-config.js` when the seed or data shape changes, because that discards saved data.
 - **Instrument and product forms are schema driven.** A section lists items in the real field order: `key`, `key*` (required), `=key` (read-only mirror), `key|Label`, `#Subheading` or `#Subheading|tipKey`, `@block`. Field types come from `FIELD_RULES` and `FIELD_DEFS`. To change a type's form, edit `market-sections.js`, not the render code.

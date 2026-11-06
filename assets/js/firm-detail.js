@@ -4,10 +4,17 @@ function sectionsFor(f) {
   return SECTIONS.filter(s => s.collection || s.fields.some(x => visible(x, f)));
 }
 
+const SECTION_ICONS = {
+  identity: 'card', regulatory: 'seal', contact: 'users', address: 'building', clearing: 'group', altNames: 'edit', personnel: 'users', aliases: 'key',
+  trading: 'chart', cross: 'chevrons', derivative: 'chart', settlement: 'quote', risk: 'shield', schedule: 'clock', metadata: 'list',
+  event: 'calendar', forex: 'refresh', multileg: 'group', calc: 'calendar', swap: 'refresh', fixed: 'refresh', float: 'refresh', ndf: 'refresh',
+};
+
 function railHTML(sections) {
   return `<aside class="rail">
+    <h2 class="rail-title">Jump to Section</h2>
     <nav class="rail-nav" aria-label="Sections">
-      ${sections.map(s => `<button type="button" data-act="jump" data-target="sec-${s.id}">${esc(s.title)}</button>`).join('')}
+      ${sections.map(s => `<button type="button" data-act="jump" data-target="sec-${s.id}">${icon(SECTION_ICONS[s.id] || 'list')}<span>${esc(s.title)}</span></button>`).join('')}
     </nav>
   </aside>`;
 }
@@ -90,8 +97,9 @@ function cellHTML(v, kind, strong) {
 function detailHeadHTML(f, tabPath, editing) {
   const tabs = TABS.filter(t => t.when(f));
   const t = TYPES[f.type];
+  const back = editing ? editBack(hrefFor(f.id), f.name, 'firms.html', 'Firms') : { href: 'firms.html', label: 'Firms' };
   return `<div class="detail-head">
-    <a class="crumb" href="firms.html">${icon('back')}Firms</a>
+    <a class="crumb" href="${esc(back.href)}">${icon('back')}${esc(back.label)}</a>
     <header class="firm-head">
       <div>
         <div class="firm-title">

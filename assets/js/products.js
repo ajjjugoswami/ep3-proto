@@ -92,6 +92,9 @@ function validateProduct() {
 function startProductForm(mode, draft) {
   const editing = mode === 'edit';
   const title = editing ? 'Edit Product' : 'Create Product';
+  const back = editing
+    ? editBack(productHref(draft.id), draft.id, 'products.html', 'Products')
+    : { href: 'products.html', label: 'Products' };
   document.title = `${title} · EP3 Admin`;
   startMarketForm({
     mode: editing ? 'edit' : 'create',
@@ -100,9 +103,9 @@ function startProductForm(mode, draft) {
     validate: validateProduct,
     submit: submitProduct,
     onChange: k => { if (refreshOnChange(k)) refreshFormBody(document.getElementById(`firm-${k}`) ? `#firm-${k}` : undefined); },
-    crumb: editing ? { href: productHref(draft.id), label: draft.id } : { href: 'products.html', label: 'Products' },
+    crumb: back,
     title,
-    backHref: editing ? productHref(draft.id) : 'products.html',
+    backHref: back.href,
     saveLabel: 'Save',
     extra: `<button class="btn btn-gray" type="button" data-act="product-save-create">Save and Create an Instrument</button>
       ${editing ? `<button class="btn btn-danger-soft" type="button" data-act="product-remove">${icon('trash')}Remove Product</button>` : ''}`,

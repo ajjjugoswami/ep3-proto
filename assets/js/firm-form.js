@@ -153,7 +153,7 @@ function dockHTML(backHref, saveLabel, extra = '') {
 function renderFormShell() {
   const creating = form.mode === 'create';
   const f = form.draft;
-  const backHref = creating ? 'firms.html' : hrefFor(f.id);
+  const backHref = creating ? 'firms.html' : editBack(hrefFor(f.id), f.name, 'firms.html', 'Firms').href;
   document.title = `${creating ? 'New Firm' : `Edit ${f.name}`} · EP3 Admin`;
   if (creating) {
     $('#view').innerHTML = `

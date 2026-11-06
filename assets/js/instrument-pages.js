@@ -223,6 +223,9 @@ async function submitInstrument() {
 function startInstrumentForm(mode, draft) {
   const editing = mode === 'edit';
   const title = editing ? 'Edit Instrument' : 'Create Instrument';
+  const back = editing
+    ? editBack(instHref(draft.id), draft.id, 'instruments.html', 'Instruments')
+    : { href: 'instruments.html', label: 'Instruments' };
   document.title = `${title} · EP3 Admin`;
   startMarketForm({
     mode: editing ? 'edit' : 'create',
@@ -231,9 +234,9 @@ function startInstrumentForm(mode, draft) {
     validate: validateInstrument,
     submit: submitInstrument,
     onChange: onInstrumentChange,
-    crumb: editing ? { href: instHref(draft.id), label: draft.id } : { href: 'instruments.html', label: 'Instruments' },
+    crumb: back,
     title,
-    backHref: editing ? instHref(draft.id) : 'instruments.html',
+    backHref: back.href,
     saveLabel: editing ? 'Save' : 'Create Instrument',
     instIdList: true,
   });

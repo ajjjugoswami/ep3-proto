@@ -39,8 +39,12 @@ function startEntityForm(kind, f, sid, rec) {
     mode: rec ? 'edit' : 'create', draft: base, original: clone(base), errors: {}, idTouched: true, saving: false,
     entity: { kind, firmId: f.id, sid, fields, one: e.one },
   };
-  const backHref = rec ? entityHref(kind, f, sid, rec.id) : entityBase(kind, f, sid);
-  const backLabel = rec ? e.title(rec) : (kind === 'keys' ? `${sid} API Keys` : `${f.name} · ${e.plural}`);
+  const listLabel = kind === 'keys' ? `${sid} API Keys` : `${f.name} · ${e.plural}`;
+  const back = rec
+    ? editBack(entityHref(kind, f, sid, rec.id), e.title(rec), entityBase(kind, f, sid), listLabel)
+    : { href: entityBase(kind, f, sid), label: listLabel };
+  const backHref = back.href;
+  const backLabel = back.label;
   document.title = `${rec ? `Edit ${e.title(rec)}` : `New ${e.one}`} · EP3 Admin`;
   $('#view').innerHTML = `<div class="page form-page">
     <a class="crumb" href="${esc(backHref)}">${icon('back')}${esc(backLabel)}</a>

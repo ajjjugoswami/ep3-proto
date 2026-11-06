@@ -7,6 +7,24 @@ const session = {
   set(k, v) { try { sessionStorage.setItem(k, v); } catch { } },
   clear() { try { sessionStorage.clear(); } catch { } },
 };
+function trackPage() {
+  const now = session.get('pageNow');
+  if (now === location.href) return;
+  session.set('pagePrev', now || '');
+  session.set('pageNow', location.href);
+}
+trackPage();
+window.addEventListener('pageshow', trackPage);
+
+const pageFile = url => new URL(url, location.href).pathname.split('/').pop().replace(/\.html$/, '');
+
+function editBack(viewHref, viewLabel, listHref, listLabel) {
+  const prev = session.get('pagePrev');
+  return prev && pageFile(prev) === pageFile(listHref)
+    ? { href: prev, label: listLabel }
+    : { href: viewHref, label: viewLabel };
+}
+
 const readSaved = key => {
   try { return JSON.parse(session.get(key)) || {}; } catch { return {}; }
 };
