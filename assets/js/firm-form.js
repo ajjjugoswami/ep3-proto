@@ -1,0 +1,326 @@
+'use strict';
+
+function fieldRow(x, values, errors, ctx) {
+  const id = `${ctx}-${x.k}`;
+  const err = errors[x.k];
+  const errEl = err ? `<div class="row-err" id="${id}-err">${icon('warn')}<span>${esc(err)}</span></div>` : '';
+  const reqTag = x.req ? '<span class="req">Required</span>' : '';
+  const help = x.help ? `<span class="row-help" id="${id}-help">${esc(x.help)}</span>` : '';
+  const described = [err ? `${id}-err` : '', x.help ? `${id}-help` : ''].filter(Boolean).join(' ');
+  const aria = `${described ? `aria-describedby="${described}"` : ''} ${err ? 'aria-invalid="true"' : ''} ${x.req ? 'aria-required="true"' : ''}`;
+
+  if (x.kind === 'toggle') {
+    const warn = x.k === 'skipRiskAndCurrencyChecks' && form && form.original.skipRiskAndCurrencyChecks && !values[x.k]
+      ? `<div class="row-warn" id="riskWarn">${icon('warn')}<span>After turning risk checks back on, restart the Position Risk Server. Until then, Pre-Trade Risk checks for this firm may be incorrect.</span></div>` : '';
+    return `<div class="row row-toggle" id="row-${id}">
+      <label class="row-label" for="${id}">${esc(x.label)}</label>
+      ${help}
+      <span class="switch"><input id="${id}" data-field="${x.k}" type="checkbox" role="switch" ${values[x.k] ? 'checked' : ''} ${aria}><span></span></span>
+      ${warn}${errEl ? `<div class="row-help">${errEl}</div>` : ''}
+    </div>`;
+  }
+
+  let control;
+  if (x.kind === 'select') {
+    const list2 = x.options.map(o => typeof o === 'string' ? { value: o, label: o } : o);
+    control = `<select class="field" id="${id}" data-field="${x.k}" ${aria}>
+      ${x.blank !== undefined ? `<option value="">${esc(x.blank)}</option>` : ''}
+      ${list2.map(o => `<option value="${esc(o.value)}" ${String(values[x.k] ?? '') === String(o.value) ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
+    </select>`;
+  } else {
+    control = `<input class="field ${x.mono ? 'mono' : ''}" id="${id}" data-field="${x.k}" type="${x.inputType || 'text'}" value="${esc(values[x.k] ?? '')}"
+      ${x.ph ? `placeholder="${esc(x.ph)}"` : ''} ${x.auto ? `autocomplete="${x.auto}"` : 'autocomplete="off"'} ${x.min !== undefined ? `min="${x.min}"` : ''}
+      ${x.mono || x.k === 'name' ? 'spellcheck="false"' : ''} ${aria}>`;
+  }
+  const lei = x.kind === 'lei' ? `<span class="meter ${leiWarn(values[x.k]) ? 'warn' : ''}" id="leiMeter">${leiText(values[x.k])}</span>` : '';
+  return `<div class="row" id="row-${id}">
+    <label class="row-label" for="${id}">${esc(x.label)}${reqTag}</label>
+    <div>${control}${lei}${errEl}</div>
+    ${help}
+  </div>`;
+}
+
+const leiWarn = v => !!v && (String(v).length !== 20 || !/^[A-Za-z0-9]+$/.test(v));
+const leiText = v => !v ? '' : leiWarn(v) ? `${String(v).length} of 20 characters, letters and numbers only` : '20 characters';
+
+function isDirty() {
+  return !!form && JSON.stringify(form.draft) !== JSON.stringify(form.original);
+}
+
+function startForm(mode, source, presetType) {
+  const base = mode === 'create'
+    ? firm('', presetType && TYPES[presetType] ? presetType : '', { id: '' })
+    : clone(source);
+  form = {
+    mode, draft: base, original: clone(base), errors: {}, idTouched: false, saving: false,
+    presetType: presetType && TYPES[presetType] ? presetType : null,
+  };
+  renderFormShell();
+}
+
+function formFieldRow(x, f) {
+  if (x.kind === 'static') return readRow(x, f);
+  if (form.mode === 'edit' && x.createOnly) return readRow(x, f);
+  if (x.kind === 'type') {
+    if (form.mode === 'edit' || form.presetType) return `<div class="row"><span class="row-label">Firm Type</span><span class="row-value">${esc(TYPES[f.type].label)}</span></div>`;
+    return fieldRow({
+      ...x, kind: 'select', req: true, blank: 'Choose a type',
+      options: Object.entries(TYPES).map(([value, t]) => ({ value, label: t.label })),
+      help: 'Can’t be changed after the firm is created.',
+    }, f, form.errors, 'firm');
+  }
+  return fieldRow(x, f, form.errors, 'firm');
+}
+
+function formRowsFor(s) {
+  const f = form.draft;
+  const fields = s.fields.filter(x => visible(x, f));
+  const ordered = form.mode === 'create' ? [...fields].sort((a, b) => (b.kind === 'type') - (a.kind === 'type')) : fields;
+  return ordered.map(x => formFieldRow(x, f)).join('');
+}
+
+function formBodyHTML() {
+  const f = form.draft;
+  if (form.entity) {
+    return `<div class="card form-card"><div class="form-grid">${form.entity.fields.map(x => formFieldRow(x, f)).join('')}</div></div>`;
+  }
+  const sections = sectionsFor(f);
+  const html = sections.map(s => `<section class="section" id="sec-${s.id}">
+    ${s.collection ? collectionHTML(s.collection, f[s.collection] || [], { editable: true, heading: true }) : `
+      <div class="section-head"><h2 class="section-title">${esc(s.id === 'identity' ? 'Firm Details' : s.title)}</h2></div>
+      <div class="card form-card"><div class="form-grid">${formRowsFor(s)}</div></div>`}
+    ${s.note ? `<p class="section-note">${esc(s.note)}</p>` : ''}
+  </section>`).join('');
+  return form.mode === 'edit' ? `<div class="split">${railHTML(sections)}<div class="sections">${html}</div></div>` : html;
+}
+
+function dockHTML(backHref, saveLabel) {
+  form.saveLabel = saveLabel;
+  return `<div class="dock">
+    <span class="dock-status" id="dockStatus"></span>
+    <div class="dock-acts">
+      <a class="btn btn-plain" href="${esc(backHref)}">Cancel</a>
+      <button class="btn btn-primary" type="submit" id="saveBtn">${esc(saveLabel)}</button>
+    </div>
+  </div>`;
+}
+
+function renderFormShell() {
+  const creating = form.mode === 'create';
+  const f = form.draft;
+  const backHref = creating ? 'firms.html' : hrefFor(f.id);
+  document.title = `${creating ? 'New Firm' : `Edit ${f.name}`} · EP3 Admin`;
+  if (creating) {
+    $('#view').innerHTML = `
+      <div class="page form-page">
+        <a class="crumb" href="${esc(backHref)}">${icon('back')}Firms</a>
+        <header class="page-head"><h1 class="large-title" tabindex="-1">${form.presetType ? `New ${esc(TYPES[form.presetType].label)}` : 'New Firm'}</h1></header>
+        <form id="firmForm" novalidate>
+          <div class="form-stack" id="formBody">${formBodyHTML()}</div>
+          ${dockHTML(backHref, 'Create Firm')}
+        </form>
+      </div>`;
+  } else {
+    $('#view').innerHTML = `
+      <div class="detail-page">
+        ${detailHeadHTML(firmById(form.original.id), '', true)}
+        <div class="detail-scroll detail-form">
+          <form id="firmForm" novalidate>
+            <div id="formBody">${formBodyHTML()}</div>
+            ${dockHTML(backHref, 'Save Changes')}
+          </form>
+        </div>
+      </div>`;
+    startSpy();
+  }
+  updateDock();
+}
+
+function refreshFormBody(refocusSelector) {
+  const view = $('.detail-scroll') || $('#view');
+  const y = view.scrollTop;
+  $('#formBody').innerHTML = formBodyHTML();
+  updateDock();
+  view.scrollTop = y;
+  startSpy();
+  enhanceSelects();
+  if (refocusSelector) { const el = $(refocusSelector); if (el) el.focus({ preventScroll: true }); }
+}
+
+function updateDock() {
+  if (!form) return;
+  const status = $('#dockStatus');
+  const save = $('#saveBtn');
+  const creating = form.mode === 'create';
+  const errCount = Object.keys(form.errors).length;
+  if (form.saving) {
+    save.disabled = true;
+    save.innerHTML = `<span class="spinner" aria-hidden="true"></span>${creating ? 'Creating…' : 'Saving…'}`;
+    status.textContent = '';
+    return;
+  }
+  save.disabled = !creating && !isDirty();
+  save.textContent = form.saveLabel;
+  status.className = `dock-status ${errCount ? 'bad' : ''}`;
+  status.textContent = errCount ? `Fix ${errCount} field${errCount === 1 ? '' : 's'} to continue` : '';
+}
+
+function validateFirm(f, mode) {
+  const e = {};
+  if (mode === 'create' && !f.type) e.type = 'Choose a firm type.';
+  if (!String(f.name || '').trim()) e.name = 'Enter a firm name.';
+  if (mode === 'create') {
+    if (!String(f.id || '').trim()) e.id = 'Enter a firm ID.';
+    else if (firmById(f.id.trim())) e.id = 'Another firm already uses this ID. Enter a different one.';
+  }
+  if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Enter an email address like name@example.com.';
+  return e;
+}
+
+function showFieldError(k) {
+  const row = $(`#row-firm-${k}`);
+  const input = $(`#firm-${k}`);
+  if (!row || !input) return;
+  const err = form.errors[k];
+  const existing = $(`#firm-${k}-err`);
+  if (existing) existing.remove();
+  if (err) {
+    input.setAttribute('aria-invalid', 'true');
+    input.insertAdjacentHTML('afterend', `<div class="row-err" id="firm-${k}-err">${icon('warn')}<span>${esc(err)}</span></div>`);
+    const help = $(`#firm-${k}-help`);
+    input.setAttribute('aria-describedby', [`firm-${k}-err`, help ? `firm-${k}-help` : ''].filter(Boolean).join(' '));
+  } else {
+    input.removeAttribute('aria-invalid');
+    const help = $(`#firm-${k}-help`);
+    if (help) input.setAttribute('aria-describedby', `firm-${k}-help`); else input.removeAttribute('aria-describedby');
+  }
+}
+
+const validateForm = () => (form.entity ? validateEntity() : validateFirm(form.draft, form.mode));
+
+async function submitFirm() {
+  if (form.saving) return;
+  if (form.entity) { submitEntity(); return; }
+  const creating = form.mode === 'create';
+  if (!creating && !isDirty()) return;
+  const f = form.draft;
+  if (typeof f.name === 'string') f.name = f.name.trim();
+  if (creating) f.id = String(f.id || '').trim();
+  form.errors = validateFirm(f, form.mode);
+  if (Object.keys(form.errors).length) {
+    refreshFormBody();
+    const first = Object.keys(form.errors)[0];
+    const el = $(`#firm-${first}`);
+    if (el) { el.focus({ preventScroll: true }); el.scrollIntoView({ block: 'center' }); }
+    return;
+  }
+  form.saving = true;
+  updateDock();
+  await wait(450);
+  const saved = clone(f);
+  const previous = creating ? null : firmById(form.original.id);
+  if (creating) firms.unshift(saved);
+  else firms[firms.indexOf(previous)] = saved;
+  persist();
+  form = null;
+  go(hrefFor(saved.id));
+  toast(creating ? `Created ${saved.name}.` : `Saved changes to ${saved.name}.`);
+}
+
+function collectionTarget() {
+  if (form) return form.draft;
+  return firmById(currentDetailId());
+}
+
+function openRecordSheet(key, index) {
+  const c = COLLECTIONS[key];
+  const owner = collectionTarget();
+  const rows = owner[key] || (owner[key] = []);
+  const editing = index !== null;
+  const values = editing ? clone(rows[index]) : Object.fromEntries(c.fields.filter(x => x.def !== undefined).map(x => [x.k, x.def]));
+  const d = $('#sheet');
+  let errors = {};
+  let opener = document.activeElement;
+
+  const paint = () => {
+    d.innerHTML = `<form class="sheet-form" novalidate>
+      <div class="sheet-head">
+        <h2 id="sheetTitle">${editing ? `Edit ${esc(c.one)}` : `Add ${esc(c.one)}`}</h2>
+        <div class="dock-acts">
+          <button class="btn btn-plain" type="button" data-sheet-cancel>Cancel</button>
+          <button class="btn btn-primary" type="submit">${editing ? 'Save' : 'Add'}</button>
+        </div>
+      </div>
+      <div class="sheet-body">
+        ${c.note ? `<p class="sheet-note">${esc(c.note)}</p>` : ''}
+        <div class="card">${c.fields.map(x => fieldRow(x, values, errors, 'rec')).join('')}</div>
+      </div>
+    </form>`;
+    $('[data-sheet-cancel]', d).addEventListener('click', () => d.close());
+    $('.sheet-form', d).addEventListener('submit', onSubmit);
+    const applyLocks = () => c.fields.forEach(x => {
+      const el = x.lockedBy && $(`#rec-${x.k}`, d);
+      if (el) el.disabled = !!values[x.lockedBy];
+    });
+    $$('[data-field]', d).forEach(inp => {
+      const sync = () => { values[inp.dataset.field] = inp.type === 'checkbox' ? inp.checked : inp.value; applyLocks(); };
+      inp.addEventListener('input', sync);
+      inp.addEventListener('change', sync);
+    });
+    applyLocks();
+  };
+
+  const onSubmit = async e => {
+    e.preventDefault();
+    errors = {};
+    c.fields.forEach(x => {
+      const v = values[x.k];
+      if (x.req && !String(v ?? '').trim()) errors[x.k] = `Enter ${x.label.toLowerCase()}.`;
+      if (x.inputType === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) errors[x.k] = 'Enter an email address like name@example.com.';
+      if (x.inputType === 'number' && v !== '' && v !== undefined && !(Number(v) >= 0)) errors[x.k] = `${x.label} must be 0 or more.`;
+    });
+    if (!Object.keys(errors).length && c.validate) errors = c.validate(values);
+    if (Object.keys(errors).length) {
+      paint();
+      const first = $(`#rec-${Object.keys(errors)[0]}`, d);
+      if (first) first.focus();
+      return;
+    }
+    if (editing) rows[index] = values; else rows.push(values);
+    d.close();
+    if (form) {
+      refreshFormBody(`[data-act="rec-add"][data-col="${key}"]`);
+    } else {
+      persist();
+      route();
+      const add = $(`[data-act="rec-add"][data-col="${key}"]`);
+      if (add) add.focus({ preventScroll: true });
+      toast(editing ? `Saved ${recordLabel(c, values)}.` : `Added ${recordLabel(c, values)}.`);
+    }
+  };
+
+  paint();
+  d.showModal();
+  const firstField = $('[data-field]', d);
+  if (firstField) firstField.focus();
+  d.addEventListener('close', () => { if (opener && opener.isConnected) opener.focus({ preventScroll: true }); }, { once: true });
+}
+
+async function removeRecord(key, index) {
+  const c = COLLECTIONS[key];
+  const owner = collectionTarget();
+  const rows = owner[key];
+  const rec = rows[index];
+  const label = recordLabel(c, rec);
+  if (form) {
+    rows.splice(index, 1);
+    refreshFormBody(`[data-act="rec-add"][data-col="${key}"]`);
+    return;
+  }
+  const ok = await ask({ title: `Remove ${label}?`, text: `This removes it from ${owner.name}.`, confirm: 'Remove', danger: true, glyph: 'trash' });
+  if (!ok) return;
+  rows.splice(index, 1);
+  persist();
+  route();
+  toast(`Removed ${label}.`);
+}
