@@ -142,6 +142,7 @@
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; margin: 18px; }
 ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-corner { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
 @supports not selector(::-webkit-scrollbar) {
@@ -366,8 +367,8 @@ h1[tabindex="-1"]:focus-visible { outline: none; }
 .skel-pager { width: 150px; height: 34px; border-radius: var(--r-s); }
 .skel-table, .tbl-firms { table-layout: fixed; }
 .tbl-firms td { overflow-wrap: anywhere; }
-.firm-col-id { width: 30%; }
-.firm-col-type { width: 160px; }
+.firm-col-id { width: 26%; }
+.firm-col-type { width: 150px; }
 .firm-col-state { width: 130px; }
 .firm-col-acts { width: 150px; }
 .skel-col-name { width: 32%; }
