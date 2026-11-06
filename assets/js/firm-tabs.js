@@ -129,9 +129,8 @@ function assocBoxHTML(f, cfg) {
   const saved = (f.assoc || {})[cfg.key] || [];
   const dirty = JSON.stringify(saved) !== JSON.stringify(box.list);
   return `<section class="section" id="assoc-${cfg.key}">
-    <div class="section-head"><h2 class="section-title">${esc(cfg.title(f.name))}</h2></div>
+    <div class="section-head"><h2 class="section-title">${esc(cfg.title(f.name))}${tipHTML(cfg.tip(f.name))}</h2></div>
     <div class="card form-card">
-      <p class="assoc-help">${esc(cfg.help(f.name))}</p>
       <div class="assoc-grid">
         ${assocListHTML(cfg.key, 'available', cfg.available || `Available ${typeLabel}s`, available, box, editable)}
         <div class="assoc-arrows">

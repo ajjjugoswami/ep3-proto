@@ -4,6 +4,10 @@ const LIMIT_TOGGLES = new Set(LIMIT_GROUPS.flatMap(g => [g.low[0], g.high[0]]));
 const BLOCK_ERROR_PREFIX = { metadata: 'metadata.', subTypes: 'subTypes.', legs: 'legs.', calc: 'dateCalculator' };
 
 const specialItem = raw => raw[0] === '#' || raw[0] === '@';
+const headingHTML = raw => {
+  const [title, tipKey] = raw.slice(1).split('|');
+  return `${esc(title)}${tipHTML(TIPS[tipKey])}`;
+};
 
 function multiRowHTML(x, v, ctx = 'firm') {
   const selected = getPath(v, x.k) || [];
@@ -18,7 +22,7 @@ function multiRowHTML(x, v, ctx = 'firm') {
 }
 
 function formItemHTML(raw, section, v, seen) {
-  if (raw[0] === '#') return `<div class="form-subhead"><h3 class="section-title">${esc(raw.slice(1))}</h3></div>`;
+  if (raw[0] === '#') return `<div class="form-subhead"><h3 class="section-title">${headingHTML(raw)}</h3></div>`;
   if (raw[0] === '@') return MARKET_BLOCKS[raw.slice(1)].form(v);
   const x = resolveField(parseItem(raw, section.lock), v);
   if (!visible(x, v)) return '';
@@ -59,7 +63,7 @@ function sectionsFormHTML(sections, v) {
 }
 
 function readItemHTML(raw, section, v, seen) {
-  if (raw[0] === '#') return `<div class="read-subhead">${esc(raw.slice(1))}</div>`;
+  if (raw[0] === '#') return `<div class="read-subhead">${headingHTML(raw)}</div>`;
   if (raw[0] === '@') return MARKET_BLOCKS[raw.slice(1)].read(v);
   const x = parseItem(raw, section.lock);
   if (seen.has(x.k) || !visible(x, v)) return '';
@@ -170,7 +174,7 @@ const LIST_BLANKS = {
 };
 
 const readTableHTML = (columns, rows, empty) => (rows.length
-  ? `<div class="table-scroll"><table class="tbl"><thead><tr>${columns.map(([label]) => `<th>${esc(label)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${columns.map(([, get]) => `<td>${cellHTML(get(r), '', false)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
+  ? `<div class="table-scroll"><table class="tbl"><thead><tr>${columns.map(([label, , tip]) => `<th>${esc(label)}${tipHTML(tip)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${columns.map(([, get]) => `<td>${cellHTML(get(r), '', false)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`
   : `<div class="empty small"><p>${esc(empty)}</p></div>`);
 
 const holidayTitle = name => {
@@ -229,7 +233,7 @@ const MARKET_BLOCKS = {
         ${limitInputHTML(g.low[0], g.low[1], `Low Limit${g.unit}`, v)}
         ${limitInputHTML(g.high[0], g.high[1], `High Limit${g.unit}`, v)}
       </div>`).join('')}</div>`),
-    read: v => LIMIT_GROUPS.map(g => readRow({ k: g.low[1], label: g.title, display: () => {
+    read: v => LIMIT_GROUPS.map(g => readRow({ k: g.low[1], label: g.title, tip: g.tip, display: () => {
       const low = v[g.low[0]] ? `Low ${v[g.low[1]]}${g.unit}` : '';
       const high = v[g.high[0]] ? `High ${v[g.high[1]]}${g.unit}` : '';
       return [low, high].filter(Boolean).join(' · ');
@@ -261,7 +265,7 @@ const MARKET_BLOCKS = {
   },
   components: {
     form: v => MARKET_BLOCKS.components.read(v),
-    read: v => ((v.componentInstruments || []).length ? `<div class="read-subhead">Component Instruments</div>${readTableHTML([['Symbol', r => r.symbol], ['Opposing Side', r => r.opposingSide]], v.componentInstruments, '')}` : ''),
+    read: v => ((v.componentInstruments || []).length ? `<div class="read-subhead">Component Instruments${tipHTML(TIPS.componentInstruments)}</div>${readTableHTML([['Symbol', r => r.symbol], ['Opposing Side', r => r.opposingSide, TIPS.opposingSide]], v.componentInstruments, '')}` : ''),
   },
   legs: {
     form: v => `<div class="list-block">${(v.legs || []).map((leg, i) => `<div class="form-grid leg-row">
@@ -277,7 +281,7 @@ const MARKET_BLOCKS = {
           <button class="btn btn-tint btn-small" type="button" data-act="category-add">${icon('plus')}Add</button>
         </div>
       </div>`,
-    read: v => readRow({ k: '_categories', label: 'Category Levels', display: () => (v.categoryLevels || []).join(' > ') }, v),
+    read: v => readRow({ k: '_categories', label: 'Category Levels', tip: TIPS.categoryLevels, display: () => (v.categoryLevels || []).join(' > ') }, v),
   },
 };
 

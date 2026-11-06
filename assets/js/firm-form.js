@@ -1,7 +1,5 @@
 'use strict';
 
-const tipHTML = text => (text ? `<span class="tip" title="${esc(text)}" role="img" aria-label="${esc(text)}">i</span>` : '');
-
 function partsControlHTML(x, values, id) {
   const off = x.disabled ? 'disabled' : '';
   return `<div class="parts parts-${x.parts.length}" role="group" aria-labelledby="${id}-label">${x.parts.map(p => {
@@ -31,7 +29,7 @@ function fieldRow(x, values, errors, ctx) {
     const warn = x.k === 'skipRiskAndCurrencyChecks' && form && !form.module && form.original.skipRiskAndCurrencyChecks && !value
       ? `<div class="row-warn" id="riskWarn">${icon('warn')}<span>After turning risk checks back on, restart the Position Risk Server. Until then, Pre-Trade Risk checks for this firm may be incorrect.</span></div>` : '';
     return `<div class="row row-toggle" id="row-${id}">
-      <label class="row-label" for="${id}">${esc(x.label)}${tipHTML(x.tip)}</label>
+      <label class="row-label" for="${id}">${esc(x.label)}${tipHTML(x.tip, values)}</label>
       ${help}
       <span class="switch"><input id="${id}" data-field="${x.k}" type="checkbox" role="switch" ${value ? 'checked' : ''} ${aria}><span></span></span>
       ${warn}${errEl ? `<div class="row-help">${errEl}</div>` : ''}
@@ -40,7 +38,7 @@ function fieldRow(x, values, errors, ctx) {
 
   if (x.kind === 'parts') {
     return `<div class="row" id="row-${id}">
-      <span class="row-label" id="${id}-label">${esc(x.label)}${reqTag}${tipHTML(x.tip)}</span>
+      <span class="row-label" id="${id}-label">${esc(x.label)}${reqTag}${tipHTML(x.tip, values)}</span>
       <div>${partsControlHTML(x, values, id)}${errEl}</div>
       ${help}
     </div>`;
@@ -62,7 +60,7 @@ function fieldRow(x, values, errors, ctx) {
   }
   const lei = x.kind === 'lei' ? `<span class="meter ${leiWarn(value) ? 'warn' : ''}" id="leiMeter">${leiText(value)}</span>` : '';
   return `<div class="row ${x.wide ? 'row-wide' : ''}" id="row-${id}">
-    <label class="row-label" for="${id}">${esc(x.label)}${reqTag}${tipHTML(x.tip)}</label>
+    <label class="row-label" for="${id}">${esc(x.label)}${reqTag}${tipHTML(x.tip, values)}</label>
     <div>${control}${lei}${errEl}</div>
     ${help}
   </div>`;
@@ -116,12 +114,11 @@ function formCollapseHTML(s) {
   const rows = form.draft[s.collection] || [];
   return `<details class="card form-collapse" data-sec="${s.id}" ${form.open.has(s.id) ? 'open' : ''}>
     <summary>
-      <span class="section-title">${esc(s.title)}</span>
+      <span class="section-title">${esc(s.title)}${tipHTML(COLLECTIONS[s.collection].tip)}</span>
       <span class="form-collapse-meta">${rows.length ? `<span>${rows.length}</span>` : ''}${icon('up')}</span>
     </summary>
     <div class="form-collapse-body">
       ${collectionHTML(s.collection, rows, { editable: true })}
-      ${s.note ? `<p class="section-note">${esc(s.note)}</p>` : ''}
     </div>
   </details>`;
 }
@@ -135,7 +132,7 @@ function formBodyHTML() {
   const rows = FIRM_FORM_ORDER.map(firmFieldByKey).filter(x => visible(x, f)).map(x => formFieldRow(x, f)).join('');
   const clearing = SECTIONS.find(s => s.id === 'clearing');
   const clearingHTML = isParticipant(f)
-    ? `<div class="form-subhead"><h2 class="section-title">${esc(clearing.title)}</h2><p>${esc(clearing.note)}</p></div>${clearing.fields.map(x => formFieldRow(x, f)).join('')}`
+    ? `<div class="form-subhead"><h2 class="section-title">${esc(clearing.title)}${tipHTML(clearing.tip)}</h2></div>${clearing.fields.map(x => formFieldRow(x, f)).join('')}`
     : '';
   return `<div class="card form-card"><div class="form-grid form-list">${rows}${clearingHTML}</div></div>
     ${SECTIONS.filter(s => s.collection).map(formCollapseHTML).join('')}`;

@@ -31,14 +31,14 @@ const SECTIONS = [
   { id: 'trading', title: 'Trading Settings', fields: [
     { k: 'applyCommissionsAsSpread', label: 'Apply Commissions as Spread', kind: 'toggle', when: isParticipant },
     { k: 'skipCommissionBalanceAdjustment', label: 'Skip Commission Balance Adjustment', kind: 'toggle', when: isParticipant },
-    { k: 'skipRiskAndCurrencyChecks', label: 'Skip Risk and Currency Checks', kind: 'toggle', when: isParticipant, help: 'Skips Pre-Trade Risk checks for all accounts under this firm.' },
+    { k: 'skipRiskAndCurrencyChecks', label: 'Skip Risk and Currency Checks', kind: 'toggle', when: isParticipant, tip: TIPS.firmSkipRisk },
     { k: 'hasSponsoredDirectMarketAccess', label: 'Has Sponsored / Direct Market Access', kind: 'toggle', when: isParticipant },
-    { k: 'isDisintermediated', label: 'Disintermediated', kind: 'toggle', when: tradesOrClears, help: 'An in-house firm operated by the exchange. This doesn’t change EP3 behavior, but some regulatory reports treat these firms differently.' },
+    { k: 'isDisintermediated', label: 'Disintermediated', kind: 'toggle', when: tradesOrClears, tip: TIPS.firmDisintermediated },
   ] },
   { id: 'regulatory', title: 'Legal & Regulatory', fields: [
     { k: 'participantType', label: 'Participant Type', kind: 'select', options: PARTICIPANT_TYPES, blank: 'Not set', when: isParticipant },
     { k: 'organizationType', label: 'Organization Type', kind: 'select', options: ORG_TYPES, blank: 'Not set' },
-    { k: 'legalEntityIdentifier', label: 'Legal Entity Identifier', mono: true, kind: 'lei', help: 'The 20-character ISO 17442 code. Regulatory reports may require it.' },
+    { k: 'legalEntityIdentifier', label: 'Legal Entity Identifier', mono: true, kind: 'lei', tip: TIPS.legalEntityIdentifier },
     { k: 'legalName', label: 'Legal Name' },
     { k: 'usTaxpayerIdentificationNumber', label: 'US Taxpayer Identification Number' },
     { k: 'designatedSelfRegulatoryOrganization', label: 'Designated Self Regulatory Organization' },
@@ -57,12 +57,12 @@ const SECTIONS = [
     { k: 'mainAddressPostalCode', label: 'Main Address Postal Code', auto: 'postal-code' },
     { k: 'mainAddressCountryCode', label: 'Main Address Country Code', auto: 'country', ph: 'US' },
   ] },
-  { id: 'clearing', title: 'Clearing Integration', note: 'Maps this firm’s trading accounts to a risk group on a clearing system. It doesn’t change how trades or balances are processed in EP3.', fields: [
-    { k: 'riskGroup', label: 'Risk Group ID', mono: true, when: isParticipant, help: 'The firm’s position accounts on the clearing platform must belong to this risk group.' },
+  { id: 'clearing', title: 'Clearing Integration', tip: TIPS.firmClearingIntegration, fields: [
+    { k: 'riskGroup', label: 'Risk Group ID', mono: true, when: isParticipant, tip: TIPS.riskGroup },
   ] },
   { id: 'altNames', title: 'Alternate Legal Names', collection: 'altNames' },
   { id: 'personnel', title: 'Key Personnel', collection: 'personnel' },
-  { id: 'aliases', title: 'Aliases', collection: 'aliases', note: 'Maps this firm to the identifiers used by third-party integrations, such as a regulator’s report.' },
+  { id: 'aliases', title: 'Aliases', collection: 'aliases' },
 ];
 
 const COLLECTIONS = {
@@ -81,7 +81,7 @@ const COLLECTIONS = {
     { k: 'addressPostalCode', label: 'Address Postal Code' },
     { k: 'addressCountryCode', label: 'Address Country Code' },
   ] },
-  aliases: { title: 'Aliases', one: 'Alias', primary: 'option', empty: 'No aliases.', columns: [['option', 'Integration'], ['alias', 'Alias']], fields: [
+  aliases: { title: 'Aliases', tip: TIPS.firmAlias, one: 'Alias', primary: 'option', empty: 'No aliases.', columns: [['option', 'Integration'], ['alias', 'Alias']], fields: [
     { k: 'option', label: 'Integration', req: true, ph: 'CFTC' },
     { k: 'alias', label: 'Alias', req: true, mono: true },
   ] },
@@ -110,20 +110,20 @@ const TABS = [
 
 const ASSOC = {
   participant: [
-    { key: 'affiliated', type: 'participant', title: n => `Participant Firms Affiliated with ${n}`, help: () => 'Associate any Participant Firms that are affiliated with this firm, such as subsidiaries of the same parent company.', available: 'Available Participant Firms', associated: 'Affiliated Participant Firms' },
-    { key: 'rfq', type: 'participant', title: n => `RFQ Participant Firms for ${n}`, help: n => `Firms that ${n} will accept RFQs from.`, available: 'Available Participant Firms', associated: 'Associated RFQ Participant Firms' },
-    { key: 'agent', type: 'agent', title: n => `Agents for ${n}`, help: () => 'Agents, typically brokers, that can enter orders on behalf of this firm.', available: 'Available Agents / Brokers', associated: 'Associated Agents / Brokers' },
-    { key: 'clearingMembers', type: 'clearingMember', title: n => `Clearing Members associated with ${n}`, help: () => 'Clearing Members where this firm has accounts.' },
+    { key: 'affiliated', type: 'participant', title: n => `Participant Firms Affiliated with ${n}`, tip: () => 'Associate any Participant Firms that are affiliated with this participant firm. These could be subsidiaries of the same parent company.', available: 'Available Participant Firms', associated: 'Affiliated Participant Firms' },
+    { key: 'rfq', type: 'participant', title: n => `RFQ Participant Firms for ${n}`, tip: n => `RFQ Participant Firms are firms that ${n} will accept RFQs from.`, available: 'Available Participant Firms', associated: 'Associated RFQ Participant Firms' },
+    { key: 'agent', type: 'agent', title: n => `Agents for ${n}`, tip: () => 'Agents are Participant Firms, typically brokers, that can enter orders on behalf of the participant firm.', available: 'Available Agents / Brokers', associated: 'Associated Agents / Brokers' },
+    { key: 'clearingMembers', type: 'clearingMember', title: n => `Clearing Members associated with ${n}`, tip: () => 'Clearing Members where the participant firm has accounts.' },
   ],
   clearingMember: [
-    { key: 'participants', type: 'participant', title: n => `Participant Firms Associated with ${n}`, help: () => 'These Participant Firms submit trades for clearance and settlement with this Clearing Member.' },
-    { key: 'clearingHouses', type: 'clearingHouse', title: n => `Clearing Houses Associated with ${n}`, help: () => 'The Clearing Houses that this Clearing Member belongs to.' },
+    { key: 'participants', type: 'participant', title: n => `Participant Firms Associated with ${n}`, tip: () => 'Associating a Participant Firm to a Clearing Member indicates that the Participant Firm submits trades for clearance and settlement with this Clearing Member.' },
+    { key: 'clearingHouses', type: 'clearingHouse', title: n => `Clearing Houses Associated with ${n}`, tip: () => 'Associate the Clearing Houses that this Clearing Member belongs to.' },
   ],
   clearingHouse: [
-    { key: 'clearingMembers', type: 'clearingMember', title: n => `Clearing Member Firms Associated with ${n}`, help: () => 'The Clearing Members that have clearing privileges with this clearing house.' },
+    { key: 'clearingMembers', type: 'clearingMember', title: n => `Clearing Member Firms Associated with ${n}`, tip: () => 'Associate the Clearing Members that have clearing privileges with this clearing house.' },
   ],
   agent: [
-    { key: 'participants', type: 'participant', title: n => `Participant Firms Associated with ${n}`, help: () => 'The Participant Firms that this Agent Firm trades on behalf of.', available: 'Available Participant Firms', associated: 'Associated Participant Firms' },
+    { key: 'participants', type: 'participant', title: n => `Participant Firms Associated with ${n}`, tip: () => 'Associate the Participant Firms that the Agent Firm trades on behalf of.', available: 'Available Participant Firms', associated: 'Associated Participant Firms' },
   ],
 };
 
@@ -166,8 +166,8 @@ const ENTITIES = {
       { k: '_firm', label: 'Participant Firm', kind: 'static', value: f.name },
       { k: 'clearingMember', label: 'Clearing Member Firm', kind: 'select', options: firmNamesOfType('clearingMember'), blank: 'Choose a firm', req: true },
       { k: 'clearingHouse', label: 'Clearing House', kind: 'select', options: firmNamesOfType('clearingHouse'), blank: 'Not set' },
-      { k: 'riskSystem', label: 'Risk System', kind: 'select', options: ['Default'], def: 'Default' },
-      { k: 'riskProfile', label: 'Risk Profile' },
+      { k: 'riskSystem', label: 'Risk System', kind: 'select', options: ['Default'], def: 'Default', tip: TIPS.riskSystem },
+      { k: 'riskProfile', label: 'Risk Profile', tip: TIPS.riskProfile },
       { k: 'priorityWeight', label: 'Account Priority Weight', inputType: 'number', min: 0 },
       { k: 'collateralAccount', label: 'Collateral Account', kind: 'select', options: (f.accounts || []).map(a => a.id), blank: 'Not set' },
       { k: 'collateralReturnEnabled', label: 'Collateral Return Enabled', kind: 'toggle' },

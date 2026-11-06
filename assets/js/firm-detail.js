@@ -46,14 +46,14 @@ function readValue(x, f) {
 function readRow(x, f) {
   if (x.kind === 'toggle') {
     return `<div class="row row-toggle">
-      <span class="row-label">${esc(x.label)}</span>
+      <span class="row-label">${esc(x.label)}${tipHTML(x.tip, f)}</span>
       ${x.help ? `<span class="row-help">${esc(x.help)}</span>` : ''}
       <span class="switch"><input type="checkbox" role="switch" disabled ${f[x.k] ? 'checked' : ''} aria-label="${esc(x.label)}"><span></span></span>
     </div>`;
   }
   const v = readValue(x, f);
   return `<div class="row">
-    <span class="row-label">${esc(x.label)}</span>
+    <span class="row-label">${esc(x.label)}${tipHTML(x.tip, f)}</span>
     ${isEmpty(v) ? `<span class="row-value unset" data-mirror="${esc(x.k)}">Not set</span>` : `<span class="row-value ${x.mono ? 'mono' : ''}" data-mirror="${esc(x.k)}">${esc(v)}</span>`}
   </div>`;
 }
@@ -62,7 +62,7 @@ function collectionHTML(key, rows, { editable, heading }) {
   const c = COLLECTIONS[key];
   const columns = c.columns || [[c.primary, c.one]];
   const addBtn = editable ? `<button class="btn btn-tint" type="button" data-act="rec-add" data-col="${key}">${icon('plus')}Add ${esc(c.one)}</button>` : '';
-  const head = heading ? `<div class="section-head"><h2 class="section-title">${esc(c.title)}</h2>${addBtn}</div>` : `<div class="section-head"><span class="page-sub">${rows.length} ${rows.length === 1 ? esc(c.one.toLowerCase()) : esc(c.title.toLowerCase())}</span>${addBtn}</div>`;
+  const head = heading ? `<div class="section-head"><h2 class="section-title">${esc(c.title)}${tipHTML(c.tip)}</h2>${addBtn}</div>` : `<div class="section-head"><span class="page-sub">${rows.length} ${rows.length === 1 ? esc(c.one.toLowerCase()) : esc(c.title.toLowerCase())}</span>${addBtn}</div>`;
   const body = !rows.length
     ? `<div class="empty small"><p>${esc(c.empty)}</p></div>`
     : `<table class="tbl">
@@ -126,9 +126,8 @@ function renderDetail(f, tabPath) {
     : `<div class="split">${railHTML(sections)}<div class="sections">${sections.map(s => `
         <section class="section" id="sec-${s.id}">
           ${s.collection ? collectionHTML(s.collection, f[s.collection] || [], { editable: false, heading: true }) : `
-            <div class="section-head"><h2 class="section-title">${esc(s.title)}</h2></div>
+            <div class="section-head"><h2 class="section-title">${esc(s.title)}${tipHTML(s.tip)}</h2></div>
             <div class="card">${s.fields.filter(x => visible(x, f)).map(x => readRow(x, f)).join('')}</div>`}
-          ${s.note ? `<p class="section-note">${esc(s.note)}</p>` : ''}
         </section>`).join('')}</div></div>`;
   $('#view').innerHTML = `
     <div class="detail-page">

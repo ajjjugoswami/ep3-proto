@@ -6,7 +6,7 @@ const REPORTING_ITEMS = ['#Reporting', 'cfiCode', 'unitOfMeasure', 'unitOfMeasur
 const CROSS_ITEMS = ['crossOrderRestingDuration', '#Instrument-Level Block Trade Thresholds', 'setBlockTradeThreshold', 'blockTradeMinimumQuantity', 'blockTradeMinimumNotional'];
 const SETTLEMENT_ITEMS = ['settlementPeriodStartOffsetFromCloseDuration', 'settlementPeriodEndOffsetFromCloseDuration', 'settlementPriceLogic', 'settlementPriceCalculationEndingMethod', 'minimumTradeQtyForVwapSettlementCalculation', 'bufferFromEndOfSettlementPeriodDuration', 'settlementPriceCalculationRequiresApproval'];
 const RISK_ITEMS = ['@limits', 'marketOrderProtectionBasisPoints', 'skipRiskAndCurrencyChecks'];
-const rollHeading = `#Trade Day Roll Schedule (${MARKET_TZ})`;
+const rollHeading = `#Trade Day Roll Schedule (${MARKET_TZ})|tradeDayRoll`;
 const swapSection = (id, title, items) => ({ id, title, lock: 'pending', items });
 const calcSection = items => swapSection('calc', 'Date Calculator', [...items, '@calc']);
 
@@ -128,7 +128,7 @@ const PRODUCT_TYPE_SECTIONS = {
     plainSection('fixed', 'Fixed Leg Swap Information', ['fixedDayCountConvention', 'fixedBusinessDayConvention']),
     plainSection('float', 'Float Leg Swap Information', ['floatDayCountConvention', 'floatBusinessDayConvention', 'floatFixingDateBusinessDayConvention', 'floatingRateIndex', 'floatFixingDatesDayType', 'floatFixingDatesOffset', 'floatFixingDate', 'floatingRateIndexTenor']),
   ],
-  [IT.EVENT]: [plainSection('event', 'Event Information', ['#Attributes', 'evtAttPayoutType*', 'evtAttEventOutcome*', 'evtAttPositionAccountability', 'evtAttPositionLimit', 'evtAttSourceAgency', 'evtAttSourceAgencyUrl', 'evtAttPayoutValue', 'evtAttPayoutLowerBound', 'evtAttPayoutUpperBound', 'evtAttCalculationMethod', 'evtAttStrikeUnit', 'evtAttStrikeEvaluationLowerLimit', 'evtAttStrikeEvaluationUpperLimit', 'evtAttFrequencyType', 'evtAttQuestion', 'evtAttUnderlyingEventSpecification', '@subTypes'], true)],
+  [IT.EVENT]: [plainSection('event', 'Event Information', ['#Attributes', 'evtAttPayoutType*', 'evtAttEventOutcome*', 'evtAttPositionAccountability', 'evtAttPositionLimit', 'evtAttSourceAgency', 'evtAttSourceAgencyUrl', 'evtAttPayoutValue', 'evtAttPayoutLowerBound', 'evtAttPayoutUpperBound', 'evtAttCalculationMethod', 'evtAttStrikeUnit', 'evtAttStrikeEvaluationLowerLimit', 'evtAttStrikeEvaluationUpperLimit', 'evtAttFrequencyType', 'evtAttQuestion|Question Template', 'evtAttUnderlyingEventSpecification', '@subTypes'], true)],
   [IT.OIS]: [
     plainSection('swap', 'Overnight Index Swap Information', ['tenor', 'tenorTimePeriod', 'sideConvention', ...PRODUCT_SWAP_DATES, 'effectiveDateOffset*', 'forwardStartingPeriod', 'forwardStartingPeriodTimePeriod', 'paymentDateDayType']),
     plainSection('fixed', 'Fixed Leg Swap Information', ['fixedPaymentFrequency', 'fixedCompoundingMethod', 'fixedDayCountConvention', 'fixedBusinessDayConvention', 'fixedRollConvention*', 'fixedPaymentDateOffset', 'fixedFirstUnadjustedPaymentDate', 'fixedPaymentDateRelativeTo']),

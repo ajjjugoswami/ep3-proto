@@ -125,7 +125,7 @@ const FIELD_DEFS = {
   type: select(PRODUCT_TYPES, { label: 'Product Type', blank: undefined, createOnly: true, refresh: true }),
   id: { mono: true, createOnly: true },
   productId: { kind: 'select', blank: 'Choose a product', createOnly: true, options: () => market.products.map(p => p.id) },
-  description: { tip: TIPS.description },
+  description: { tip: v => ('productId' in v ? TIPS.description : TIPS.productDescription) },
   routingkey: { tip: TIPS.routingkey, disabled: v => isLocked(v) || [IT.MULTILEG, IT.BASIS, IT.ZCIS].includes(v.type) },
   externalSymbol: { tip: TIPS.externalSymbol, lock: 'pending' },
   evtAttEventId: { list: 'eventIds', createOnly: true, when: v => v.type === IT.EVENT, refresh: true },
@@ -189,7 +189,7 @@ const FIELD_DEFS = {
   evtAttOrdinalRank: { label: 'Ordinal Rank', num: true, gt: 0, tip: TIPS.evtAttOrdinalRank, req: isDirectional, disabled: v => !isDirectional(v) },
   evtAttPositionAccountability: { label: 'Position Accountability Value', tip: TIPS.evtAttPositionAccountability },
   evtAttPositionLimit: { label: 'Position Limit', tip: TIPS.evtAttPositionLimit },
-  evtAttQuestion: { label: 'Question', wide: true, tip: TIPS.evtAttQuestion },
+  evtAttQuestion: { label: 'Question', wide: true, tip: v => ('productId' in v ? TIPS.evtAttQuestion : TIPS.productQuestion) },
   settlementFee: { num: true, gte: 0, tip: TIPS.settlementFee },
   settlementFeeDestinationAccount: { tip: TIPS.settlementFeeDestinationAccount },
   evtAttPayoutValue: { label: 'Payout Value', num: true, gt: 0, lock: 'create', req: v => !isContinuous(v), disabled: isContinuous },
@@ -246,8 +246,8 @@ function resolveField(x, v) {
 }
 
 const LIMIT_GROUPS = [
-  { title: 'Absolute Price Limits', tip: 'The minimum and maximum price for acceptable orders. Orders that violate a limit are rejected.', low: ['setLowPriceLimit', 'lowPriceLimit'], high: ['setHighPriceLimit', 'highPriceLimit'], unit: '' },
-  { title: 'Relative Price Limits', tip: '', low: ['relativeLowSet', 'relativeLow'], high: ['relativeHighSet', 'relativeHigh'], unit: ' (%)' },
-  { title: 'Order Size Limits', tip: 'The minimum and maximum quantity for acceptable orders. Orders that violate a limit are rejected.', low: ['setLowOrderLimit', 'lowOrderLimit'], high: ['setHighOrderLimit', 'highOrderLimit'], unit: '' },
-  { title: 'Total Notional Limits', tip: 'The minimum and maximum notional value for acceptable orders, in the instrument’s Currency.', low: ['setLowTotalNotionalLimit', 'lowTotalNotionalLimit'], high: ['setHighTotalNotionalLimit', 'highTotalNotionalLimit'], unit: '' },
+  { title: 'Absolute Price Limits', tip: TIPS.absolutePriceLimits, low: ['setLowPriceLimit', 'lowPriceLimit'], high: ['setHighPriceLimit', 'highPriceLimit'], unit: '' },
+  { title: 'Relative Price Limits', tip: TIPS.relativePriceLimits, low: ['relativeLowSet', 'relativeLow'], high: ['relativeHighSet', 'relativeHigh'], unit: ' (%)' },
+  { title: 'Order Size Limits', tip: TIPS.orderSizeLimits, low: ['setLowOrderLimit', 'lowOrderLimit'], high: ['setHighOrderLimit', 'highOrderLimit'], unit: '' },
+  { title: 'Total Notional Limits', tip: TIPS.totalNotionalLimits, low: ['setLowTotalNotionalLimit', 'lowTotalNotionalLimit'], high: ['setHighTotalNotionalLimit', 'highTotalNotionalLimit'], unit: '' },
 ];
