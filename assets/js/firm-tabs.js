@@ -75,11 +75,13 @@ function entityTabHTML(kind, f) {
 function accountsTabHTML(f) {
   const positions = f.positions || [];
   const auto = storage.get('ep3.firms.prototype.autoReload') === '1';
-  return `${entityTabHTML('accounts', f)}
+  const editable = !f.deleted;
+  return `${entityToolbarHTML('accounts', f, null, editable)}
+    <label class="check tab-option"><span class="switch"><input type="checkbox" role="switch" id="autoReload" ${auto ? 'checked' : ''}><span></span></span>Auto Reload Positions</label>
+    ${entityTableHTML('accounts', f, null, editable)}
     <section class="section tab-block">
       <div class="section-head">
         <h2 class="section-title">Account Positions</h2>
-        <label class="check"><span class="switch"><input type="checkbox" role="switch" id="autoReload" ${auto ? 'checked' : ''}><span></span></span>Auto Reload Positions</label>
       </div>
       ${positions.length ? `<div class="card table-scroll"><table class="tbl tbl-wide">
         <thead><tr><th>Account</th><th>Symbol</th><th>Sub Type</th><th class="num">BOD Position</th><th class="num">Open Positions</th><th class="num">Qty Bought</th><th class="num">Qty Sold</th><th class="num">Unsettled</th></tr></thead>

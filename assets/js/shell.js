@@ -12,10 +12,16 @@ function renderSidebar() {
       ${NAV.map(g => `
         <div class="side-group">
           <div class="side-label">${esc(g.label)}</div>
-          ${g.items.map(([label, ic, live]) => live
+          ${g.items.map(([label, ic, live, act]) => live
             ? `<a class="nav-item" href="firms.html" aria-current="page" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></a>`
-            : `<button class="nav-item" type="button" data-act="nav-soon" data-label="${esc(label)}" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></button>`).join('')}
+            : `<button class="nav-item" type="button" data-act="${act || 'nav-soon'}" data-label="${esc(label)}" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></button>`).join('')}
         </div>`).join('')}
+      <div class="side-info">
+        <span class="mono">${esc(APP_INFO.appVersion)}</span>
+        <span>${esc(APP_INFO.client)}</span>
+        <span>Version ${esc(APP_INFO.licenseVersion)}</span>
+        <span>Expires ${esc(licenseExpiry(APP_INFO.expires))}</span>
+      </div>
     </div>
     <div class="side-foot">
       <div class="appearance">
@@ -24,7 +30,7 @@ function renderSidebar() {
           ${THEMES.map(([value, label, ic]) => `<button type="button" data-act="theme-set" data-pref="${value}" aria-pressed="${pref === value}" aria-label="${label}" title="${label}">${icon(ic)}<span>${label}</span></button>`).join('')}
         </div>
       </div>
-      <button class="nav-item nav-danger" type="button" data-act="logout" title="Log Off">${icon('logout')}<span class="nav-text">Log Off</span></button>
+      <button class="btn btn-logoff" type="button" data-act="logout" title="Log Off">${icon('logout')}<span class="nav-text">Log Off</span></button>
     </div>`;
 }
 
@@ -41,6 +47,33 @@ function applyTheme() {
     ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
     : pref;
   requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
+}
+
+function licenseExpiry(raw) {
+  const parts = String(raw).match(/^(\d{4})(\d{2})(\d{2})/);
+  if (!parts) return raw;
+  const date = new Date(Date.UTC(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])));
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+function showLicense() {
+  const d = $('#alert');
+  d.innerHTML = `
+    <div class="alert-body">
+      <div class="alert-glyph">${icon('seal')}</div>
+      <h2 id="alertTitle">License</h2>
+      <p id="alertText">${esc(APP_INFO.client)}</p>
+      <dl class="license-list">
+        <div><dt>App Version</dt><dd class="mono">${esc(APP_INFO.appVersion)}</dd></div>
+        <div><dt>Version</dt><dd>${esc(APP_INFO.licenseVersion)}</dd></div>
+        <div><dt>Expires On</dt><dd>${esc(licenseExpiry(APP_INFO.expires))}</dd></div>
+      </dl>
+    </div>
+    <div class="alert-acts alert-acts-single">
+      <button class="btn btn-primary" type="button" autofocus>OK</button>
+    </div>`;
+  $('button', d).addEventListener('click', () => d.close());
+  d.showModal();
 }
 
 function renderLogin() {

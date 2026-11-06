@@ -13,6 +13,7 @@ const ACT = {
   },
   'side-close'() { document.body.classList.remove('side-open'); },
   'nav-soon'(el) { toast(`${el.dataset.label} isn’t part of this prototype.`, { info: true }); },
+  license() { showLicense(); },
   'theme-set'(el) {
     storage.set(THEME_KEY, el.dataset.pref);
     applyTheme();

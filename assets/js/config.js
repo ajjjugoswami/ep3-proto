@@ -204,6 +204,12 @@ const NAV = [
   { label: 'Directory', items: [['Firms', 'building', true], ['Users', 'users'], ['Accounts', 'card'], ['Groups', 'group']] },
   { label: 'Markets', items: [['Instruments', 'list'], ['Time & Sales', 'calendar'], ['Order Search', 'search'], ['RFQ Search', 'quote']] },
   { label: 'Operations', items: [['Admin Requests', 'check'], ['Jobs', 'terminal'], ['Alerts', 'bell']] },
-  { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal']] },
+  { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal', false, 'license']] },
 ];
+const APP_INFO = {
+  appVersion: 'v0.5.6-7b97fe0',
+  client: 'Connamara Integrations Env',
+  licenseVersion: '>0.7.0',
+  expires: '20300211-05:30:00.000',
+};
 const THEMES = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['system', 'System', 'monitor']];
