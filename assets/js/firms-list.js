@@ -255,11 +255,13 @@ function pagerHTML(total) {
       <label class="pager-size"><span>Rows per page:</span>
         <select class="field" id="pageSize">${[10, 25, 50].map(n => `<option value="${n}" ${size === n ? 'selected' : ''}>${n}</option>`).join('')}</select>
       </label>
+      <div class="pager-pages">
       <button class="icon-btn pager-nav" type="button" data-act="page" data-d="-1" aria-label="Previous Page" ${page === 0 ? 'disabled' : ''}>${icon('back')}</button>
       ${pageNumbers(page, pages).map(p => (p === null
         ? '<span class="page-gap">…</span>'
         : `<button class="page-num" type="button" data-act="page-to" data-p="${p}" ${p === page ? 'aria-current="page"' : ''} aria-label="Page ${p + 1}">${p + 1}</button>`)).join('')}
       <button class="icon-btn pager-nav" type="button" data-act="page" data-d="1" aria-label="Next Page" ${page >= pages - 1 ? 'disabled' : ''}>${icon('forward')}</button>
+      </div>
     </div>
   </div>`;
 }

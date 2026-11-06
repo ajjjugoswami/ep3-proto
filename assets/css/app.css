@@ -880,6 +880,7 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 .list-card tbody tr[data-href]:hover .acts { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--table-head); }
 .list-card .pager { padding: 12px 2px 0; border-top: 0; }
 .pager-size { display: inline-flex; align-items: center; gap: 8px; margin-right: 10px; white-space: nowrap; }
+.pager-pages { display: flex; align-items: center; gap: 6px; }
 .pager .pager-size .select-wrap { min-width: 66px; }
 .pager-nav { width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px; }
 .page-num { min-width: 30px; height: 30px; padding: 0 6px; border-radius: 7px; color: var(--ink-2); font-size: 13px; font-weight: 560; }
@@ -887,7 +888,6 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 .page-num[aria-current="page"] { background: var(--accent-fill); color: #fff; }
 .page-gap { padding: 0 2px; color: var(--ink-3); }
 @media (max-width: 680px) {
-  .pager-actions { flex-wrap: wrap; justify-content: center; }
   .control-bar .head-acts { width: 100%; }
 }
 @media (max-width: 860px) {
@@ -918,5 +918,9 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
   .list-card .tbl-wide .inst-state { position: absolute; top: 11px; right: 14px; }
   .list-card .tbl-wide .desc-cell { grid-column: 1 / -1; order: -1; overflow: visible; color: var(--ink-2); }
   .list-card .tbl-wide .acts { position: static; grid-column: 1 / -1; order: 10; display: flex; justify-content: flex-end; gap: 2px; width: auto; margin-bottom: -4px; padding: 0; background: none; box-shadow: none; }
-  .pager-size { justify-content: center; width: 100%; margin-right: 0; }
+  .pager, .list-card .pager { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px 12px; }
+  .pager-actions { display: contents; }
+  .pager-size { margin-right: 0; }
+  .pager-size > span:first-child { display: none; }
+  .pager-pages { grid-column: 1 / -1; justify-content: center; }
 }
