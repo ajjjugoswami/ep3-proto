@@ -12,9 +12,9 @@ function renderSidebar() {
       ${NAV.map(g => `
         <div class="side-group">
           <div class="side-label">${esc(g.label)}</div>
-          ${g.items.map(([label, ic, live, act]) => live
+          ${g.items.map(([label, ic, live]) => live
             ? `<a class="nav-item" href="firms.html" aria-current="page" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></a>`
-            : `<button class="nav-item" type="button" data-act="${act || 'nav-soon'}" data-label="${esc(label)}" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></button>`).join('')}
+            : `<button class="nav-item" type="button" data-act="nav-soon" data-label="${esc(label)}" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></button>`).join('')}
         </div>`).join('')}
     </div>
     <div class="side-foot">
@@ -24,7 +24,7 @@ function renderSidebar() {
           ${THEMES.map(([value, label, ic]) => `<button type="button" data-act="theme-set" data-pref="${value}" aria-pressed="${pref === value}" aria-label="${label}" title="${label}">${icon(ic)}<span>${label}</span></button>`).join('')}
         </div>
       </div>
-      <button class="nav-item" type="button" data-act="reset-data" title="Reset Sample Data">${icon('restore')}<span class="nav-text">Reset Sample Data</span></button>
+      <button class="nav-item nav-danger" type="button" data-act="logout" title="Log Off">${icon('logout')}<span class="nav-text">Log Off</span></button>
     </div>`;
 }
 

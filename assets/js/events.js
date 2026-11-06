@@ -13,15 +13,6 @@ const ACT = {
   },
   'side-close'() { document.body.classList.remove('side-open'); },
   'nav-soon'(el) { toast(`${el.dataset.label} isn’t part of this prototype.`, { info: true }); },
-  async 'reset-data'() {
-    const ok = await ask({ title: 'Reset sample data?', text: 'This removes the changes you’ve made and restores the original firms.', confirm: 'Reset', danger: true, glyph: 'restore' });
-    if (!ok) return;
-    firms = seed();
-    form = null;
-    storage.del(STORE_KEY);
-    go('firms.html');
-    toast('Sample data reset.');
-  },
   'theme-set'(el) {
     storage.set(THEME_KEY, el.dataset.pref);
     applyTheme();

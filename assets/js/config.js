@@ -204,6 +204,6 @@ const NAV = [
   { label: 'Directory', items: [['Firms', 'building', true], ['Users', 'users'], ['Accounts', 'card'], ['Groups', 'group']] },
   { label: 'Markets', items: [['Instruments', 'list'], ['Time & Sales', 'calendar'], ['Order Search', 'search'], ['RFQ Search', 'quote']] },
   { label: 'Operations', items: [['Admin Requests', 'check'], ['Jobs', 'terminal'], ['Alerts', 'bell']] },
-  { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal'], ['Log Off', 'logout', false, 'logout']] },
+  { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal']] },
 ];
 const THEMES = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['system', 'System', 'monitor']];

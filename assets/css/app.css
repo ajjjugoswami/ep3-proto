@@ -4,6 +4,8 @@
   --nav-active: rgba(16, 24, 40, .065);
   --nav-icon: #5B6474;
   --nav-icon-active: #133487;
+  --logoff: #C81E1E;
+  --logoff-bg: rgba(200, 30, 30, .09);
   --seg-bg: rgba(16, 24, 40, .05);
   --seg-active: #FFFFFF;
   --seg-shadow: 0 1px 2px rgba(16, 24, 40, .14);
@@ -59,6 +61,8 @@
   --nav-active: rgba(255, 255, 255, .08);
   --nav-icon: #7DB6EC;
   --nav-icon-active: #B9DD62;
+  --logoff: #F87171;
+  --logoff-bg: rgba(248, 113, 113, .12);
   --seg-bg: rgba(255, 255, 255, .06);
   --seg-active: rgba(255, 255, 255, .14);
   --seg-shadow: 0 1px 2px rgba(0, 0, 0, .3);
@@ -238,6 +242,9 @@ h1[tabindex="-1"]:focus-visible { outline: none; }
 .nav-item:hover { background: var(--nav-active); }
 .nav-item[aria-current="page"] { background: var(--nav-active); font-weight: 650; }
 .nav-item[aria-current="page"] .i { color: var(--nav-icon-active); stroke-width: 2.1; }
+.nav-item.nav-danger { margin-bottom: 0; color: var(--logoff); }
+.nav-item.nav-danger .i { color: var(--logoff); }
+.nav-item.nav-danger:hover { background: var(--logoff-bg); }
 .side-foot { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
 .appearance .side-label { padding-bottom: 7px; }
 .theme-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 3px; border-radius: 12px; background: var(--seg-bg); border: 1px solid var(--line); }
