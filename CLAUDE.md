@@ -124,7 +124,7 @@ Instruments module, from `pages/Instruments.js`, `InstrumentForm.js` and `Produc
 Keep these unless told otherwise. The user wants a simple admin tool, not a fancy one.
 
 - **Font:** Geist and Geist Mono, not Montserrat. Google Fonts is loaded from a CDN.
-- **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark uses neutral near-black with white text. Light uses a neutral off-white sidebar, white panel and grey icons.
+- **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark uses neutral near-black with white text. Light uses a neutral off-white sidebar and white panel. In both themes, sidebar icons are blue and the selected one is green.
 - **App shell:** flat sidebar, with the content in a large rounded panel and thin scrollbars inset from the corners.
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Login:** centred form with no card, logo above "Welcome back", eye icon on the password, no side panel or decorative shapes.
