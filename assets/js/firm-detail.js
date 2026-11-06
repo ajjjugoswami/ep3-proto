@@ -69,7 +69,7 @@ function collectionHTML(key, rows, { editable, heading }) {
   const c = COLLECTIONS[key];
   const columns = c.columns || [[c.primary, c.one]];
   const addBtn = editable ? `<button class="btn btn-tint" type="button" data-act="rec-add" data-col="${key}">${icon('plus')}Add ${esc(c.one)}</button>` : '';
-  const head = heading ? `<div class="section-head"><h2 class="section-title">${esc(c.title)}${tipHTML(c.tip)}</h2>${addBtn}</div>` : `<div class="section-head"><span class="page-sub">${rows.length} ${rows.length === 1 ? esc(c.one.toLowerCase()) : esc(c.title.toLowerCase())}</span>${addBtn}</div>`;
+  const head = heading ? `<div class="section-head"><h2 class="section-title">${esc(c.title)}${tipHTML(c.tip)}</h2>${addBtn}</div>` : `<div class="section-head head-end">${addBtn}</div>`;
   const body = !rows.length
     ? `<div class="empty small"><p>${esc(c.empty)}</p></div>`
     : `<table class="tbl">

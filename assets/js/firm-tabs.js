@@ -57,8 +57,7 @@ function entityTableHTML(kind, f, sid, editable) {
 function entityToolbarHTML(kind, f, sid, editable) {
   const e = ENTITIES[kind];
   const rows = entityRows(kind, f, sid);
-  return `<div class="tab-toolbar">
-    <span class="page-sub">${rows.length} ${rows.length === 1 ? esc(e.one.toLowerCase()) : esc(e.plural.toLowerCase())}</span>
+  return `<div class="tab-toolbar head-end">
     ${editable ? `<div class="head-acts">
       ${e.bulk ? `<button class="btn btn-gray" type="button" data-act="ent-bulk" data-kind="${kind}" data-state="Suspended" ${rows.length ? '' : 'disabled'}>Suspend All</button>
       <button class="btn btn-gray" type="button" data-act="ent-bulk" data-kind="${kind}" data-state="Active" ${rows.length ? '' : 'disabled'}>Activate All</button>` : ''}
