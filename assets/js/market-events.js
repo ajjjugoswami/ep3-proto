@@ -4,16 +4,19 @@ Object.assign(ACT, {
   'inst-row-menu'(el) { openMenu(el, instrumentMenuItems(instrumentById(el.dataset.id), false)); },
   'inst-detail-menu'(el) { openMenu(el, instrumentMenuItems(instrumentById(el.dataset.id), true)); },
   'inst-clear-filters'() {
-    Object.assign(instList, blankInstrumentFilters(), { page: 0 });
+    Object.assign(instList, blankInstrumentFilters(), { page: 0, more: false });
     refreshInstrumentFilters();
     refreshInstruments();
   },
+  'inst-more-filters'() {
+    instList.more = !instList.more;
+    saveListState('instList', instList);
+    refreshInstrumentFilters();
+    enhanceSelects();
+    $('[data-act="inst-more-filters"]').focus();
+  },
+  'inst-ops-menu'(el) { openMenu(el, instrumentOpsMenuItems()); },
   'inst-refresh'() { refreshMarketData(); },
-  'inst-halt-all'() { haltAllInstruments(); },
-  'inst-resume'() { resumeHaltedInstruments(); },
-  'inst-export'() { exportInstruments(); },
-  'inst-import'() { $('#csvFile').click(); },
-  'inst-approve'() { openApproveSheet(); },
   'inst-sel-state'() { go(instMultiStateHref(filteredInstruments().filter(i => instSelected.has(i.id)).map(i => i.id))); },
   'inst-sel-delete'() { deleteInstruments(filteredInstruments().filter(i => instSelected.has(i.id)).map(i => i.id), true); },
   'inst-sel-clear'() {
@@ -58,8 +61,11 @@ Object.assign(ACT, {
   },
   'history-reset'() {
     Object.assign(historyList, todayRange(), { page: 0 });
-    $('#historyFrom').value = historyList.from;
-    $('#historyTo').value = historyList.to;
+    [['#historyFrom', historyList.from], ['#historyTo', historyList.to]].forEach(([selector, value]) => {
+      const input = $(selector);
+      input.value = value;
+      syncDateButton(input);
+    });
     listCtl.refresh();
   },
   'history-view'(el) { openHistoryDetail(instrumentById(param('id')), el.dataset.time); },
@@ -104,7 +110,13 @@ document.addEventListener('change', e => {
   if (t.matches('[data-filter]') && t.type !== 'search') {
     instList[t.dataset.filter] = t.value;
     instList.page = 0;
-    if (t.dataset.filter === 'type') refreshInstrumentFilters();
+    if (t.dataset.filter === 'type') {
+      if (t.value === IT.IRS) instList.more = true;
+      else INSTRUMENT_FILTERS.filter(f => f.irs).forEach(f => { instList[f.k] = ''; });
+      refreshInstrumentFilters();
+      enhanceSelects();
+      $('[data-filter="type"]').focus();
+    }
     refreshInstruments();
     return;
   }

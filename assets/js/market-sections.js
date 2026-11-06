@@ -165,10 +165,10 @@ const SYNC_GROUPS = {
 };
 
 const INSTRUMENT_FILTERS = [
-  { k: 'productName', label: 'Product Name (ID)', search: true },
-  { k: 'id', label: 'Instrument ID (Symbol)', search: true },
-  { k: 'state', label: 'Instrument State', options: INST_STATES },
-  { k: 'type', label: 'Instrument Type', options: PRODUCT_TYPES },
+  { k: 'productName', label: 'Product Name (ID)', search: true, primary: true },
+  { k: 'id', label: 'Instrument ID (Symbol)', search: true, primary: true },
+  { k: 'state', label: 'Instrument State', options: INST_STATES, primary: true },
+  { k: 'type', label: 'Instrument Type', options: PRODUCT_TYPES, primary: true },
   { k: 'isScheduled', label: 'Schedule State', options: OPT.scheduleFilter },
   { k: 'isTradable', label: 'Tradable', options: OPT.tradableFilter },
   { k: 'hasLegs', label: 'Has Legs', options: OPT.legsFilter },

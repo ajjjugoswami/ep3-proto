@@ -1,6 +1,6 @@
 'use strict';
 
-const productList = { sort: 'id', dir: 1, page: 0, size: 10, ...readSaved('productList') };
+const productList = { sort: 'id', dir: 1, page: 0, size: 10, ...readListState('productList') };
 
 function renderProducts() {
   document.title = 'Products · EP3 Admin';
@@ -13,7 +13,7 @@ function renderProducts() {
 }
 
 function refreshProducts() {
-  session.set('productList', JSON.stringify(productList));
+  saveListState('productList', productList);
   const value = p => String(p[productList.sort] || '');
   const rows = [...market.products].sort((a, b) => value(a).localeCompare(value(b), undefined, { sensitivity: 'base' }) * productList.dir);
   if (!rows.length) {

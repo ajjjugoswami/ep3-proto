@@ -87,7 +87,7 @@ async function submitStats(inst) {
   toast('Instrument stats were saved.');
 }
 
-const historyList = { page: 0, size: 10, from: '', to: '' };
+const historyList = { page: 0, size: 10, from: '', to: '', ...readListState('historyList') };
 const todayRange = () => {
   const now = new Date();
   return { from: `${isoDate(now)}T00:00`, to: `${isoDate(now)}T23:59` };
@@ -135,13 +135,14 @@ function renderHistoryPage() {
         <button class="btn btn-primary" type="button" data-act="history-filter">Filter</button>
         <button class="btn btn-gray" type="button" data-act="history-reset">Reset</button>
       </div>
-      <section class="card" id="historyResults" aria-label="Historical market stats"></section>
+      <section class="card card-clip" id="historyResults" aria-label="Historical market stats"></section>
     </div>
   </div>`;
   refreshHistory(inst);
 }
 
 function refreshHistory(inst) {
+  saveListState('historyList', historyList);
   const from = new Date(historyList.from);
   const to = new Date(historyList.to);
   const rows = historyRows(inst).filter(r => new Date(r.transactionTime) >= from && new Date(r.transactionTime) <= to);

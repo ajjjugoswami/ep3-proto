@@ -173,7 +173,7 @@ function pagerHTML(total) {
 }
 
 function refreshList() {
-  session.set('firmsList', JSON.stringify(list));
+  saveListState('firmsList', list);
   refreshChrome();
   const rows = sortedFirms(filteredFirms());
   const pages = Math.max(1, Math.ceil(rows.length / list.size));

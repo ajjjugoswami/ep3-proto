@@ -16,6 +16,16 @@ const storage = {
   set(k, v) { try { localStorage.setItem(k, v); } catch { } },
   del(k) { try { localStorage.removeItem(k); } catch { } },
 };
+const LIST_STATE_PREFIX = 'ep3.list.';
+const readListState = key => {
+  try { return JSON.parse(storage.get(LIST_STATE_PREFIX + key)) || {}; } catch { return {}; }
+};
+const saveListState = (key, state) => storage.set(LIST_STATE_PREFIX + key, JSON.stringify(state));
+const clearListStates = () => {
+  try {
+    Object.keys(localStorage).filter(k => k.startsWith(LIST_STATE_PREFIX)).forEach(k => localStorage.removeItem(k));
+  } catch { }
+};
 const load = () => {
   try {
     const raw = storage.get(STORE_KEY);
@@ -31,11 +41,21 @@ let spy = null;
 let spyLock = 0;
 let assocState = null;
 let firstList = session.get('listShown') !== '1';
-const list = { q: '', type: '', state: '', deleted: false, sort: 'seed', dir: 1, page: 0, size: 10, ...readSaved('firmsList') };
+const list = { q: '', type: '', state: '', deleted: false, sort: 'seed', dir: 1, page: 0, size: 10, ...readListState('firmsList') };
 let listCtl = { state: list, refresh: () => refreshList() };
 
 const persist = () => storage.set(STORE_KEY, JSON.stringify(firms));
 const clone = o => JSON.parse(JSON.stringify(o));
+const pad2 = n => String(n).padStart(2, '0');
+const isoDate = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const isoDateTime = d => `${isoDate(d)}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+function timeLabel(seconds) {
+  const total = Number(seconds) % 86400;
+  const hour = Math.floor(total / 3600);
+  const minute = Math.floor((total % 3600) / 60);
+  const suffix = hour < 12 ? 'am' : 'pm';
+  return `${hour % 12 || 12}:${pad2(minute)} ${suffix}`;
+}
 const getPath = (o, path) => String(path).split('.').reduce((v, key) => (v === undefined || v === null ? undefined : v[key]), o);
 const setPath = (o, path, value) => {
   const keys = String(path).split('.');

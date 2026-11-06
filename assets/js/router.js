@@ -65,6 +65,7 @@ function route() {
   if (spy) { spy.disconnect(); spy = null; }
   closeMenu(false);
   closeSelect(false);
+  closeDatePicker(false);
   document.body.classList.remove('side-open');
 
   if (PAGE === 'login') {

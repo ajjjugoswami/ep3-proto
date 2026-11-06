@@ -137,7 +137,7 @@ const refreshOnChange = k => (FIELD_DEFS[k] || {}).refresh || LIMIT_TOGGLES.has(
 function syncMirrors(k) {
   if (!form) return;
   const value = getPath(form.draft, k);
-  const text = Array.isArray(value) ? value.join(', ') : value;
+  const text = Array.isArray(value) ? value.join(', ') : formatWhen(value);
   $$(`[data-mirror="${k}"]`).forEach(el => {
     el.textContent = isEmpty(text) ? 'Not set' : text;
     el.classList.toggle('unset', isEmpty(text));

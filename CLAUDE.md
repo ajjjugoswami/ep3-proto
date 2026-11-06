@@ -44,6 +44,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `js/seed.js` | Sample firms and the generator that fills their tabs |
 | `js/core.js` | Page and URL helpers, storage, state, `hrefFor`, `go`, flash toasts |
 | `js/ui.js` | Toasts, confirm dialog, menus, custom dropdowns |
+| `js/date-picker.js` | Themed date, date-time and time pickers, and `formatWhen` |
 | `js/shell.js` | Sidebar, theme, login page, license dialog |
 | `js/firms-list.js` | Firm list, filters, sorting, pagination, firm actions |
 | `js/firm-detail.js` | Firm header and tabs, profile, left section menu, shared read rows and collections |
@@ -74,6 +75,8 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 - **Rendering:** pages render into `#view` from template strings. Always pass dynamic values through `esc()`.
 - **Actions:** add a `data-act` attribute and a matching entry in `ACT` in `events.js`, or in `market-events.js` for the instruments module.
 - **Dropdowns:** render a normal `<select>`. `enhanceSelects()` replaces it with the themed dropdown automatically.
+- **Dates and times:** render a normal `<input type="date">`, `datetime-local` or `time`. `enhanceDates()` in `date-picker.js` replaces it with the themed picker, and the hidden input keeps the ISO value. If you set `.value` from code, call `syncDateButton(input)`. Show stored values with `formatWhen()`. Don't use the browser's native pickers.
+- **List state:** save filters, sort and page with `saveListState` and read them with `readListState`. They stay until the user resets them or logs off, including after closing the tab.
 - **Links:** build URLs with `hrefFor`, `entityBase`, `entityHref` and `entityNewHref`.
 - **Toasts across pages:** call `toast()` around `go()`. It is saved and shown on the next page.
 - **Unsaved changes:** forms use `form.draft` and `isDirty()`. Leaving a dirty form asks first.
@@ -123,7 +126,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Login:** centred form with no card, logo above "Welcome back", eye icon on the password, no side panel or decorative shapes.
 - **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in rows.
-- **Instrument list:** the real popover filter is inline and applies live. Row actions are an Edit icon and a More menu rather than seven icons, and the actions column stays visible while the wide table scrolls.
+- **Instrument list:** keep the area above the table to one row. Product, Symbol, State and Type filters apply live, the other filters sit behind More Filters, and Reset only shows when a filter is active. Export, settlement price actions, Resume and Halt All sit in one Actions menu, not a row of buttons. Row actions are an Edit icon and a More menu rather than seven icons, and the actions column stays visible while the wide table scrolls.
 - **Firm pages:** fixed header with underlined tabs. Only the content scrolls.
 - **Forms:** real field order flowing into responsive columns, 44px inputs, Save then Cancel in a footer pinned to the bottom left.
 - **Toasts:** top centre, one at a time, no Undo.

@@ -48,18 +48,7 @@ const decimalsOf = v => {
   return text.includes('.') ? text.split('.')[1].length : 0;
 };
 const validScale = (value, increment) => decimalsOf(value) <= decimalsOf(increment);
-const pad2 = n => String(n).padStart(2, '0');
-const isoDate = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-const isoDateTime = d => `${isoDate(d)}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-const showDateTime = v => String(v || '').replace('T', ' ');
-
-function timeLabel(seconds) {
-  const total = Number(seconds) % 86400;
-  const hour = Math.floor(total / 3600);
-  const minute = Math.floor((total % 3600) / 60);
-  const suffix = hour < 12 ? 'am' : 'pm';
-  return `${hour % 12 || 12}:${pad2(minute)} ${suffix}`;
-}
+const showDateTime = v => formatWhen(v || '');
 
 function hoursLabel(s) {
   const days = s.days || [];

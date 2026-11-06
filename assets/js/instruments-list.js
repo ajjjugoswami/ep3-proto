@@ -1,10 +1,12 @@
 'use strict';
 
 const blankInstrumentFilters = () => Object.fromEntries(INSTRUMENT_FILTERS.map(f => [f.k, '']));
-const instList = { page: 0, size: 10, ...blankInstrumentFilters(), ...readSaved('instList') };
+const instList = { page: 0, size: 10, more: false, ...blankInstrumentFilters(), ...readListState('instList') };
 const instSelected = new Set();
 
 const instrumentFilterActive = () => INSTRUMENT_FILTERS.some(f => instList[f.k]);
+const secondaryFilters = () => INSTRUMENT_FILTERS.filter(f => !f.primary && (!f.irs || instList.type === IT.IRS));
+const secondaryFilterCount = () => secondaryFilters().filter(f => instList[f.k]).length;
 
 function matchesInstrumentFilters(i) {
   const f = instList;
@@ -43,9 +45,25 @@ function filterFieldHTML(f) {
 }
 
 function instrumentFiltersHTML() {
-  const shown = INSTRUMENT_FILTERS.filter(f => !f.irs || instList.type === IT.IRS);
-  return `${shown.map(filterFieldHTML).join('')}
-    <button class="btn btn-gray filter-reset" type="button" data-act="inst-clear-filters" ${instrumentFilterActive() ? '' : 'disabled'}>Reset</button>`;
+  const count = secondaryFilterCount();
+  return `<div class="filters">
+      ${INSTRUMENT_FILTERS.filter(f => f.primary).map(filterFieldHTML).join('')}
+      <button class="btn btn-gray" type="button" data-act="inst-more-filters" aria-expanded="${!!instList.more}">More Filters<span class="count-badge" id="instMoreCount" ${count ? '' : 'hidden'}>${count}</span></button>
+      <button class="btn btn-plain" type="button" data-act="inst-clear-filters" ${instrumentFilterActive() ? '' : 'hidden'}>Reset</button>
+      <button class="btn btn-gray push" type="button" data-act="inst-ops-menu" aria-haspopup="menu">Actions${icon('chevrons')}</button>
+    </div>
+    ${instList.more ? `<div class="filters filters-more">${secondaryFilters().map(filterFieldHTML).join('')}</div>` : ''}`;
+}
+
+function instrumentOpsMenuItems() {
+  return [
+    { label: 'Export Data', icon: 'download', run: exportInstruments },
+    { label: 'Import Settlement Prices', icon: 'upload', run: () => $('#csvFile').click() },
+    { label: 'Approve Settlement Prices', icon: 'check', run: openApproveSheet },
+    '-',
+    { label: 'Resume Halted to Schedule', icon: 'play', run: resumeHaltedInstruments },
+    { label: 'Halt All', icon: 'pause', danger: true, run: haltAllInstruments },
+  ];
 }
 
 function renderInstruments() {
@@ -56,20 +74,11 @@ function renderInstruments() {
       <button class="btn btn-gray" type="button" data-act="inst-refresh">${icon('refresh')}Refresh Market Data</button>
       <a class="btn btn-primary" href="instrument.html?mode=new">${icon('plus')}Add Instrument</a>`)}
     <div class="detail-scroll">
-      <div class="filter-grid" id="instFilters">${instrumentFiltersHTML()}</div>
-      <div class="op-bar">
-        <p class="sr" id="instCount" aria-live="polite"></p>
-        <div class="head-acts">
-          <button class="btn btn-danger-soft" type="button" data-act="inst-halt-all">${icon('pause')}Halt All</button>
-          <button class="btn btn-gray" type="button" data-act="inst-resume">${icon('play')}Resume Halted to Schedule</button>
-          <button class="btn btn-gray" type="button" data-act="inst-export">${icon('download')}Export Data</button>
-          <button class="btn btn-gray" type="button" data-act="inst-import">${icon('upload')}Import Settlement Prices</button>
-          <button class="btn btn-gray" type="button" data-act="inst-approve">${icon('check')}Approve Settlement Prices</button>
-          <input type="file" id="csvFile" accept=".csv" hidden>
-        </div>
-      </div>
+      <div id="instFilters">${instrumentFiltersHTML()}</div>
+      <input type="file" id="csvFile" accept=".csv" hidden>
+      <p class="sr" id="instCount" aria-live="polite"></p>
       <div class="sel-bar" id="instSelection" hidden></div>
-      <section class="card" id="instResults" aria-label="Instruments"></section>
+      <section class="card card-clip" id="instResults" aria-label="Instruments"></section>
     </div>
   </div>`;
   refreshInstruments();
@@ -130,15 +139,20 @@ function instrumentRowHTML(i) {
 }
 
 function refreshInstruments() {
-  session.set('instList', JSON.stringify(instList));
+  saveListState('instList', instList);
   const rows = filteredInstruments();
   const pages = Math.max(1, Math.ceil(rows.length / instList.size));
   instList.page = Math.min(instList.page, pages - 1);
   const start = instList.page * instList.size;
   const pageRows = rows.slice(start, start + instList.size);
   $('#instCount').textContent = `${rows.length} instrument${rows.length === 1 ? '' : 's'}`;
-  const reset = $('[data-act="inst-clear-filters"]');
-  if (reset) reset.disabled = !instrumentFilterActive();
+  const reset = $('#instFilters [data-act="inst-clear-filters"]');
+  if (reset) reset.hidden = !instrumentFilterActive();
+  const moreCount = $('#instMoreCount');
+  if (moreCount) {
+    moreCount.hidden = !secondaryFilterCount();
+    moreCount.textContent = secondaryFilterCount();
+  }
   if (!rows.length) {
     $('#instResults').innerHTML = instrumentFilterActive()
       ? `<div class="empty"><h3>No matching instruments</h3><p>Try different filters, or clear them.</p><button class="btn btn-tint" type="button" data-act="inst-clear-filters">Clear Filters</button></div>`

@@ -23,6 +23,7 @@ const ACT = {
     storage.del(SESSION_KEY);
     form = null;
     session.clear();
+    clearListStates();
     go('index.html');
   },
   'clear-filters'() {

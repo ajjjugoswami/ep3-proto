@@ -136,6 +136,7 @@ function pickOption(index) {
 function openSelect(sel) {
   closeMenu(false);
   closeSelect(false);
+  closeDatePicker(false);
   const btn = sel._btn;
   const uid = ++selectUid;
   const pop = document.createElement('div');
@@ -222,6 +223,7 @@ function enhanceSelects() {
     btn.addEventListener('keydown', e => onSelectKey(e, sel));
     if (focused) btn.focus({ preventScroll: true });
   });
+  enhanceDates();
 }
 
 document.addEventListener('mousedown', e => {

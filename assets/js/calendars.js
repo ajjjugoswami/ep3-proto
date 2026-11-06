@@ -1,6 +1,6 @@
 'use strict';
 
-const calendarView = { view: 'agenda', anchor: isoDate(new Date()), ...readSaved('calendarView') };
+const calendarView = { view: 'agenda', anchor: isoDate(new Date()), ...readListState('calendarView') };
 const dayMs = 86400000;
 const parseDay = text => new Date(`${text}T12:00`);
 const longDate = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
@@ -47,7 +47,7 @@ function weekHTML(anchor) {
 
 function renderCalendars() {
   document.title = 'Calendars · EP3 Admin';
-  session.set('calendarView', JSON.stringify(calendarView));
+  saveListState('calendarView', calendarView);
   const anchor = parseDay(calendarView.anchor);
   const start = calendarView.view === 'week' ? weekStart(anchor) : anchor;
   const end = new Date(start.getTime() + (calendarView.view === 'week' ? 6 : 365) * dayMs);

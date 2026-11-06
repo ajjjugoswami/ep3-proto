@@ -285,6 +285,7 @@ function parseItem(raw, secLock) {
   const parsed = { k, label: humanize(k), lock: secLock, ...(rule ? rule[1] : {}), ...FIELD_DEFS[k], ro };
   if (label) parsed.label = label;
   if (req) parsed.req = true;
+  if (parsed.inputType && !parsed.display) parsed.display = v => formatWhen(getPath(v, k));
   return parsed;
 }
 
