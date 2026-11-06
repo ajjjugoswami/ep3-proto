@@ -1,67 +1,36 @@
 'use strict';
 
-function selectedStateIds() {
-  const raw = param('ids');
-  if (raw) {
-    try { return JSON.parse(raw); } catch { return []; }
-  }
-  return param('id') ? [param('id')] : [];
-}
-
-function renderStatePage() {
-  const ids = selectedStateIds();
-  const rows = ids.map(instrumentById);
-  if (!ids.length || rows.some(r => !r)) {
-    marketNotFound('Instrument not found', ids.join(', '), 'instruments.html', 'Instruments');
-    return;
-  }
-  const single = param('id') ? rows[0] : null;
-  const title = single ? 'Edit Instrument State' : 'Edit Multiple Instrument State';
-  document.title = `${title} · EP3 Admin`;
-  const draft = {
-    ids: ids.join(', '), selState: single ? single.state : '', isScheduled: single ? !!single.isScheduled : false, scheduleExecutionTime: '',
-    symbolSubType: '', side: '', resolutionPrice: '', outcomeResult: '',
-  };
-  startMarketForm({
-    mode: 'edit',
-    draft,
-    validate: () => validateStateForm(rows),
-    submit: () => submitStateForm(rows),
-    onChange: k => { if (k === 'isScheduled' || k === 'side') refreshFormBody(`#firm-${k}`); },
-    crumb: single ? { href: instHref(single.id), label: single.id } : { href: 'instruments.html', label: 'Instruments' },
-    title,
-    backHref: single ? instHref(single.id) : 'instruments.html',
-    saveLabel: 'Save Instrument State',
-    extra: `<button class="btn btn-gray" type="button" data-act="state-eod">Perform EOD Actions</button>`,
-  });
-  form.module.body = () => stateFormBody(rows);
-  refreshFormBody();
-}
+let stateSheet = null;
 
 function allowedStates(rows) {
   const allPending = rows.every(r => r.state === 'Pending');
   return INST_STATES.filter(s => s !== 'Pending' || allPending);
 }
 
-function stateFormBody(rows) {
-  const v = form.draft;
+const stateFields = rows => v => [
+  { k: 'selState', label: 'State', kind: 'select', options: allowedStates(rows), blank: 'Choose a state', req: !v.isScheduled, disabled: !!v.isScheduled },
+  { k: 'isScheduled', label: 'Follow Instrument Trading Hours', kind: 'toggle' },
+  { k: 'scheduleExecutionTime', label: 'Schedule Execution Time', inputType: 'datetime-local', help: 'Leave empty to change the state now.' },
+];
+
+function resolutionFieldsHTML(rows, v) {
   const hasSubTypes = (rows[0].subTypes || []).length > 0;
+  const row = x => fieldRow(x, v, stateSheet.errors, 'rec');
+  return `${hasSubTypes
+    ? row({ k: 'symbolSubType', label: 'Winning Symbol Sub Type', kind: 'select', options: rows[0].subTypes.map(t => t.symbol), blank: 'Choose a sub type' })
+    : row({ k: 'side', label: 'Winning Side', kind: 'select', options: RESOLUTION_SIDES, blank: 'Choose a side' })}
+    ${row({ k: 'resolutionPrice', label: 'Resolution Price', tip: TIPS.resolutionPrice, disabled: !hasSubTypes && v.side !== 'Dual' })}
+    ${row({ k: 'outcomeResult', label: 'Resolution Outcome Result', tip: TIPS.outcomeResult })}`;
+}
+
+function stateExtraHTML(rows, v) {
   const isEvent = rows.every(r => r.type === IT.EVENT);
-  return `<div class="card form-card"><div class="form-grid form-list">
-      ${readRow({ k: 'ids', label: rows.length > 1 ? 'Instrument IDs (Symbol)' : 'Instrument ID (Symbol)', mono: true }, v)}
-      ${fieldRow({ k: 'selState', label: 'State', kind: 'select', options: allowedStates(rows), blank: 'Choose a state', req: !v.isScheduled, disabled: !!v.isScheduled }, v, form.errors, 'firm')}
-      ${fieldRow({ k: 'isScheduled', label: 'Follow Instrument Trading Hours', kind: 'toggle' }, v, form.errors, 'firm')}
-      ${fieldRow({ k: 'scheduleExecutionTime', label: 'Schedule Execution Time', inputType: 'datetime-local', help: 'Leave empty to change the state now.' }, v, form.errors, 'firm')}
-    </div></div>
-    ${NETTING_ENABLED && isEvent ? `<div class="card form-card">
-      <h2 class="section-title card-title">Resolution</h2>
-      <div class="form-grid form-list">
-        ${hasSubTypes
-          ? fieldRow({ k: 'symbolSubType', label: 'Winning Symbol Sub Type', kind: 'select', options: rows[0].subTypes.map(t => t.symbol), blank: 'Choose a sub type' }, v, form.errors, 'firm')
-          : fieldRow({ k: 'side', label: 'Winning Side', kind: 'select', options: RESOLUTION_SIDES, blank: 'Choose a side' }, v, form.errors, 'firm')}
-        ${fieldRow({ k: 'resolutionPrice', label: 'Resolution Price', tip: TIPS.resolutionPrice, disabled: !hasSubTypes && v.side !== 'Dual' }, v, form.errors, 'firm')}
-        ${fieldRow({ k: 'outcomeResult', label: 'Resolution Outcome Result', tip: TIPS.outcomeResult }, v, form.errors, 'firm')}
-      </div>
+  return `<div class="sheet-extra card-acts">
+      <button class="btn btn-gray" type="button" data-act="state-eod">Perform EOD Actions</button>
+    </div>
+    ${NETTING_ENABLED && isEvent ? `<div class="sheet-extra">
+      <h3 class="section-title">Resolution</h3>
+      <div class="card">${resolutionFieldsHTML(rows, v)}</div>
       <div class="card-acts">
         <button class="btn btn-tint" type="button" data-act="state-resolve">Perform Resolution</button>
         <button class="btn btn-gray" type="button" data-act="state-undo-resolve">Undo Resolution</button>
@@ -69,23 +38,15 @@ function stateFormBody(rows) {
     </div>` : ''}`;
 }
 
-function validateStateForm() {
-  const v = form.draft;
-  const e = {};
-  if (!v.isScheduled && !v.selState) e.selState = 'Choose a state.';
-  return e;
+function finishStateChange(message) {
+  saveMarket();
+  instSelected.clear();
+  if (PAGE === 'instruments') refreshInstruments();
+  else route();
+  toast(message);
 }
 
-async function submitStateForm(rows) {
-  const v = form.draft;
-  form.errors = validateStateForm();
-  if (Object.keys(form.errors).length) {
-    refreshFormBody();
-    updateDock();
-    return;
-  }
-  const ok = await ask({ title: `Update ${rows.length === 1 ? 'the state' : 'all states'}?`, text: rows.length === 1 ? `This updates the state of ${rows[0].id}.` : `This updates the state of ${rows.length} instruments.`, confirm: 'Update State', glyph: 'warn' });
-  if (!ok) return;
+function saveInstrumentState(rows, v) {
   const future = v.scheduleExecutionTime && new Date(v.scheduleExecutionTime) > new Date();
   rows.forEach(r => {
     r.isScheduled = !!v.isScheduled;
@@ -95,50 +56,64 @@ async function submitStateForm(rows) {
       delete r.scheduledChange;
     }
   });
-  saveMarket();
-  form = null;
-  go('instruments.html');
-  toast(future ? 'State change scheduled.' : 'Instrument state saved.');
+  finishStateChange(future ? 'State change scheduled.' : 'Instrument state saved.');
+}
+
+function openStateSheet(ids) {
+  const rows = ids.map(instrumentById).filter(Boolean);
+  if (!rows.length) return;
+  const single = rows.length === 1 ? rows[0] : null;
+  const values = {
+    selState: single ? single.state : '', isScheduled: single ? !!single.isScheduled : false, scheduleExecutionTime: '',
+    symbolSubType: '', side: '', resolutionPrice: '', outcomeResult: '',
+  };
+  stateSheet = { rows, values, errors: {}, sheet: null };
+  stateSheet.sheet = openFormSheet({
+    title: single ? 'Change State' : `Change State for ${rows.length} Instruments`,
+    submit: 'Save',
+    note: `${single ? 'Instrument' : 'Instruments'}: ${rows.map(r => r.id).join(', ')}`,
+    fields: stateFields(rows),
+    values,
+    repaintOn: ['isScheduled', 'side'],
+    extra: v => stateExtraHTML(rows, v),
+    onSubmit: v => saveInstrumentState(rows, v),
+  });
 }
 
 async function performEodActions() {
-  const rows = selectedStateIds().map(instrumentById);
-  const ok = await ask({ title: 'Perform EOD actions?', text: `This runs end of day actions for ${rows.length === 1 ? rows[0].id : `${rows.length} instruments`}.`, confirm: 'Perform EOD Actions', glyph: 'play' });
+  const { rows } = stateSheet;
+  const ok = await ask({ title: 'Perform EOD actions?', text: `This runs end of day actions for ${rows.length === 1 ? rows[0].id : `${rows.length} instruments`}.`, confirm: 'Confirm', glyph: 'play' });
   if (!ok) return;
-  form = null;
-  go('instruments.html');
-  toast('EOD actions submitted.');
+  $('#sheet').close();
+  finishStateChange('EOD actions submitted.');
 }
 
 async function performResolution() {
-  const rows = selectedStateIds().map(instrumentById);
-  const v = form.draft;
+  const { rows, values: v } = stateSheet;
   const hasSubTypes = (rows[0].subTypes || []).length > 0;
-  form.errors = {};
-  if (v.resolutionPrice && !Number.isFinite(Number(v.resolutionPrice))) form.errors.resolutionPrice = 'Please enter a valid Resolution Price.';
-  else if (hasSubTypes && !v.symbolSubType) form.errors.symbolSubType = 'Please select Winning Symbol Sub Type.';
-  else if (!hasSubTypes && !v.side) form.errors.side = 'Please select Winning Side.';
-  if (Object.keys(form.errors).length) {
-    refreshFormBody();
-    updateDock();
+  stateSheet.errors = {};
+  if (v.resolutionPrice && !Number.isFinite(Number(v.resolutionPrice))) stateSheet.errors.resolutionPrice = 'Please enter a valid Resolution Price.';
+  else if (hasSubTypes && !v.symbolSubType) stateSheet.errors.symbolSubType = 'Please select Winning Symbol Sub Type.';
+  else if (!hasSubTypes && !v.side) stateSheet.errors.side = 'Please select Winning Side.';
+  const failed = Object.keys(stateSheet.errors)[0];
+  if (failed) {
+    stateSheet.sheet.paint();
+    document.getElementById(`rec-${failed}`).focus();
     return;
   }
+  stateSheet.sheet.paint();
   const ok = await ask({ title: 'Perform resolution?', text: 'This performs resolution for all selected instruments.', confirm: 'Perform Resolution', glyph: 'check' });
   if (!ok) return;
   rows.forEach(r => { r.resolution = { winner: v.symbolSubType || v.side, price: v.resolutionPrice, outcomeResult: v.outcomeResult }; });
-  saveMarket();
-  form = null;
-  go('instruments.html');
-  toast('Perform resolution completed successfully.');
+  $('#sheet').close();
+  finishStateChange('Perform resolution completed successfully.');
 }
 
 async function undoResolution() {
-  const rows = selectedStateIds().map(instrumentById);
+  const { rows } = stateSheet;
   const ok = await ask({ title: 'Undo resolution?', text: 'This undoes resolution for all selected instruments.', confirm: 'Undo Resolution', danger: true, glyph: 'restore' });
   if (!ok) return;
   rows.forEach(r => { delete r.resolution; });
-  saveMarket();
-  form = null;
-  go('instruments.html');
-  toast('Undo resolution completed successfully.');
+  $('#sheet').close();
+  finishStateChange('Undo resolution completed successfully.');
 }

@@ -42,7 +42,7 @@ function renderInstrumentView(i) {
           <div class="firm-meta"><span>${esc(i.type || 'Default')}</span><span>·</span><a href="${esc(productHref(i.productId))}">${esc(i.productId)}</a>${i.description ? `<span>·</span><span>${esc(i.description)}</span>` : ''}</div>
         </div>
         <div class="head-acts">
-          ${editable ? `<a class="btn btn-gray" href="${esc(instStateHref(i.id))}">${icon('warn')}Change State</a>` : ''}
+          ${editable ? `<button class="btn btn-gray" type="button" data-act="inst-state" data-id="${esc(i.id)}">${icon('warn')}Change State</button>` : ''}
           <a class="btn btn-gray" href="${esc(instHref(i.id, 'copy'))}">${icon('copy')}Copy</a>
           ${editable ? `<a class="btn btn-primary" href="${esc(instHref(i.id, 'edit'))}">${icon('edit')}Edit Instrument</a>` : ''}
           <button class="icon-btn btn-gray" type="button" data-act="inst-detail-menu" data-id="${esc(i.id)}" aria-haspopup="menu" aria-label="More actions" title="More">${icon('more')}</button>

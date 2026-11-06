@@ -26,7 +26,6 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `api-key.html` | View, add or edit a key | `firm`, `service`, `id`, `mode=new\|edit` |
 | `instruments.html` | Instrument list and exchange-wide actions | |
 | `instrument.html` | View, add, edit or copy an instrument | `id`, `mode=new\|edit\|copy`, `productId` (preset on new) |
-| `instrument-state.html` | Change state, EOD actions, resolution | `id`, or `ids` as a JSON array |
 | `instrument-stats.html` | Review market stats | `id` |
 | `instrument-history.html` | Historical market stats | `id` |
 | `books.html` | Unaggregated limit and stop book | `instrumentId` |
@@ -62,7 +61,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `js/instruments-list.js` | Instrument list, filters, selection, instrument menu, Halt All, Resume, refresh |
 | `js/settlement-prices.js` | Export Data, CSV import and approval of settlement prices |
 | `js/instrument-pages.js` | Instrument view page, form, validation and save |
-| `js/instrument-state.js` | State page, EOD actions and resolution |
+| `js/instrument-state.js` | Change State dialog, EOD actions and resolution |
 | `js/instrument-stats.js` | Market stats and historical market stats |
 | `js/books.js` | Unaggregated book |
 | `js/products.js` | Product list, view page, form and child instrument sync |
@@ -74,7 +73,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 
 ## How the code works
 
-- **Plain scripts, not ES modules.** This keeps double-clicking `index.html` working. Top-level `const` and functions are shared between files, so script order matters only for code that runs at load. New script files must be added to all 19 HTML files.
+- **Plain scripts, not ES modules.** This keeps double-clicking `index.html` working. Top-level `const` and functions are shared between files, so script order matters only for code that runs at load. New script files must be added to all 18 HTML files.
 - **Rendering:** pages render into `#view` from template strings. Always pass dynamic values through `esc()`.
 - **Actions:** add a `data-act` attribute and a matching entry in `ACT` in `events.js`, or in `market-events.js` for the instruments module.
 - **Dropdowns:** render a normal `<select>`. `enhanceSelects()` replaces it with the themed dropdown automatically.
@@ -129,6 +128,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **App shell:** flat sidebar, with the content in a large rounded panel and thin scrollbars inset from the corners.
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Login:** centred form with no card, logo above "Welcome back", eye icon on the password, no side panel or decorative shapes.
+- **Change State:** opens as a dialog over the current page, for one instrument or a selection, not a separate page. Save applies straight away with no second confirmation. EOD actions and resolution are in the same dialog and do ask first.
 - **Filter chips:** on the firm and instrument lists, each active filter shows as a chip below the filters, with an X to remove it and a Clear all link. These replace the Reset button. Show Deleted is a toggle, not a chip.
 - **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in the name cells. Row actions are View and Edit icons and a More menu, the same as the instrument list.
 - **Instrument list:** keep the area above the table to one row. Product, Symbol, State and Type filters apply live, and the other filters sit behind More Filters. Export, settlement price actions, Resume and Halt All sit in one Actions menu, not a row of buttons. Row actions are View and Edit icons and a More menu rather than seven icons, and the actions column stays visible while the wide table scrolls.

@@ -281,7 +281,7 @@ function collectionTarget() {
   return firmById(currentDetailId());
 }
 
-function openFormSheet({ title, submit, note, fields, values, validate, onSubmit, repaintOn = [], sync }) {
+function openFormSheet({ title, submit, note, fields, values, validate, onSubmit, repaintOn = [], sync, extra }) {
   const d = $('#sheet');
   let errors = {};
   const opener = document.activeElement;
@@ -300,6 +300,7 @@ function openFormSheet({ title, submit, note, fields, values, validate, onSubmit
       <div class="sheet-body">
         ${note ? `<p class="sheet-note">${esc(note)}</p>` : ''}
         <div class="card">${fieldList().map(x => fieldRow(x, values, errors, 'rec')).join('')}</div>
+        ${extra ? extra(values) : ''}
       </div>
     </form>`;
     $('[data-sheet-cancel]', d).addEventListener('click', () => d.close());
@@ -331,7 +332,7 @@ function openFormSheet({ title, submit, note, fields, values, validate, onSubmit
     errors = {};
     fieldList().forEach(x => {
       const v = values[x.k];
-      if (x.req && !String(v ?? '').trim()) errors[x.k] = `Enter ${x.label.toLowerCase()}.`;
+      if (x.req && !String(v ?? '').trim()) errors[x.k] = requiredMessage(x);
       if (x.inputType === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) errors[x.k] = 'Enter an email address like name@example.com.';
       if (x.inputType === 'number' && v !== '' && v !== undefined && !(Number(v) >= 0)) errors[x.k] = `${x.label} must be 0 or more.`;
     });
@@ -351,6 +352,7 @@ function openFormSheet({ title, submit, note, fields, values, validate, onSubmit
   const firstField = $('[data-field]', d);
   if (firstField) firstField.focus();
   d.addEventListener('close', () => { if (opener && opener.isConnected) opener.focus({ preventScroll: true }); }, { once: true });
+  return { paint };
 }
 
 function openRecordSheet(key, index) {

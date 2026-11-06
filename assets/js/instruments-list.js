@@ -213,7 +213,7 @@ function instrumentMenuItems(i, onDetail) {
   const editable = instEditable(i);
   return [
     ...(onDetail ? [] : [
-      { label: 'Change State', icon: 'warn', disabled: !editable, reason: EDIT_BLOCKED, run: () => go(instStateHref(i.id)) },
+      { label: 'Change State', icon: 'warn', disabled: !editable, reason: EDIT_BLOCKED, run: () => openStateSheet([i.id]) },
       { label: 'Edit', icon: 'edit', disabled: !editable, reason: EDIT_BLOCKED, run: () => go(instHref(i.id, 'edit')) },
       { label: 'Copy', icon: 'copy', run: () => go(instHref(i.id, 'copy')) },
       '-',

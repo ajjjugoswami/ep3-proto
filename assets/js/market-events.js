@@ -18,7 +18,8 @@ Object.assign(ACT, {
   },
   'inst-ops-menu'(el) { openMenu(el, instrumentOpsMenuItems()); },
   'inst-refresh'() { refreshMarketData(); },
-  'inst-sel-state'() { go(instMultiStateHref(filteredInstruments().filter(i => instSelected.has(i.id)).map(i => i.id))); },
+  'inst-state'(el) { openStateSheet([el.dataset.id]); },
+  'inst-sel-state'() { openStateSheet(filteredInstruments().filter(i => instSelected.has(i.id)).map(i => i.id)); },
   'inst-sel-delete'() { deleteInstruments(filteredInstruments().filter(i => instSelected.has(i.id)).map(i => i.id), true); },
   'inst-sel-clear'() {
     instSelected.clear();

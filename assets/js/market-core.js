@@ -32,8 +32,6 @@ const productById = id => market.products.find(p => p.id === id);
 
 const withQuery = (page, params) => `${page}?${new URLSearchParams(params)}`;
 const instHref = (id, mode) => withQuery('instrument.html', { id, ...(mode ? { mode } : {}) });
-const instStateHref = id => withQuery('instrument-state.html', { id });
-const instMultiStateHref = ids => withQuery('instrument-state.html', { ids: JSON.stringify(ids) });
 const instStatsHref = id => withQuery('instrument-stats.html', { id });
 const instHistoryHref = id => withQuery('instrument-history.html', { id });
 const bookHref = id => withQuery('books.html', { instrumentId: id });
@@ -140,7 +138,6 @@ function renderMarketPage() {
   ({
     instruments: renderInstruments,
     instrument: renderInstrumentPage,
-    'instrument-state': renderStatePage,
     'instrument-stats': renderStatsPage,
     'instrument-history': renderHistoryPage,
     books: renderBooksPage,

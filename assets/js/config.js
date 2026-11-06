@@ -206,7 +206,7 @@ const NAV = [
   { label: 'Operations', items: [['Admin Requests', 'check'], ['Jobs', 'terminal'], ['Alerts', 'bell']] },
   { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal', false, 'license']] },
 ];
-const MARKET_PAGES = ['instruments', 'instrument', 'instrument-state', 'instrument-stats', 'instrument-history', 'books', 'products', 'product', 'calendars'];
+const MARKET_PAGES = ['instruments', 'instrument', 'instrument-stats', 'instrument-history', 'books', 'products', 'product', 'calendars'];
 const APP_INFO = {
   appVersion: 'v0.5.6-7b97fe0',
   client: 'Connamara Integrations Env',
