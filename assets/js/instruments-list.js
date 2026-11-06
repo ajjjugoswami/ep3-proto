@@ -108,13 +108,13 @@ function renderInstruments() {
     ${moduleHeadHTML('instruments', `
       <button class="btn btn-gray" type="button" data-act="inst-refresh">${icon('refresh')}Refresh Market Data</button>
       <a class="btn btn-primary" href="instrument.html?mode=new">${icon('plus')}Add Instrument</a>`)}
-    <div class="detail-scroll">
+    <div class="detail-scroll list-view">
       <div id="instFilters">${instrumentFiltersHTML()}</div>
       <div class="filter-chips" id="instChips" role="group" aria-label="Active filters" hidden></div>
       <input type="file" id="csvFile" accept=".csv" hidden>
       <p class="sr" id="instCount" aria-live="polite"></p>
       <div class="sel-bar" id="instSelection" hidden></div>
-      <section class="card card-clip" id="instResults" aria-label="Instruments"></section>
+      <section class="card card-clip list-card" id="instResults" aria-label="Instruments"></section>
     </div>
   </div>`;
   refreshInstruments();

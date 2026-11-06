@@ -81,7 +81,7 @@ function sortedFirms(rows) {
 function renderList() {
   document.title = 'Firms · EP3 Admin';
   $('#view').innerHTML = `
-    <div class="page">
+    <div class="page list-view">
       <header class="page-head">
         <div><h1 class="large-title" tabindex="-1">Firms</h1><p class="sr" id="listCount" aria-live="polite"></p></div>
         <a class="btn btn-primary" href="firm-new.html">${icon('plus')}New Firm</a>
@@ -110,7 +110,7 @@ function renderList() {
         <label class="check push"><span class="switch"><input type="checkbox" role="switch" id="showDeleted" ${list.deleted ? 'checked' : ''}><span></span></span>Show Deleted</label>
       </div>
       <div class="filter-chips" id="firmChips" role="group" aria-label="Active filters" hidden></div>
-      <section class="card" id="results" aria-label="Firms"></section>
+      <section class="card card-clip list-card" id="results" aria-label="Firms"></section>
     </div>`;
   if (firstList) {
     firstList = false;
@@ -200,6 +200,10 @@ function sortRows(rows, value, dir) {
   });
 }
 
+function scrollListToTop() {
+  $$('#view, .detail-scroll, .list-card > .table-scroll').forEach(el => { el.scrollTop = 0; });
+}
+
 function patchListTable(box, html) {
   const next = document.createElement('template');
   next.innerHTML = html;
@@ -256,11 +260,11 @@ function refreshList() {
     return;
   }
   patchListTable($('#results'), `
-    <table class="tbl tbl-firms">
+    <div class="table-scroll"><table class="tbl tbl-firms">
       <colgroup><col><col class="firm-col-id hide-compact"><col class="firm-col-type hide-compact"><col class="firm-col-state"><col class="firm-col-acts"></colgroup>
       <thead><tr>${sortHeader('name', 'Name')}${sortHeader('id', 'Firm ID', 'hide-compact')}<th class="hide-compact">Type</th><th>State</th><th class="acts"><span class="sr">Actions</span></th></tr></thead>
       <tbody>${pageRows.map(rowHTML).join('')}</tbody>
-    </table>
+    </table></div>
     ${pagerHTML(rows.length)}`);
 }
 

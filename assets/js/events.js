@@ -48,13 +48,13 @@ const ACT = {
     if (state.sort === key) state.dir *= -1; else { state.sort = key; state.dir = 1; }
     state.page = 0;
     listCtl.refresh();
+    scrollListToTop();
     $(`[data-act="sort"][data-key="${key}"]`).focus({ preventScroll: true });
   },
   page(el) {
     listCtl.state.page += Number(el.dataset.d);
     listCtl.refresh();
-    const scroller = $('.detail-scroll') || $('#view');
-    scroller.scrollTop = 0;
+    scrollListToTop();
   },
   'row-menu'(el) { openMenu(el, firmMenuItems(firmById(el.dataset.id), false)); },
   'detail-menu'(el) { openMenu(el, firmMenuItems(firmById(el.dataset.id), true)); },

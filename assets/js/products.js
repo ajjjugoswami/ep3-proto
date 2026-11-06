@@ -7,7 +7,7 @@ function renderProducts() {
   listCtl = { state: productList, refresh: refreshProducts };
   $('#view').innerHTML = `<div class="detail-page">
     ${moduleHeadHTML('products', `<a class="btn btn-primary" href="product.html?mode=new">${icon('plus')}Add New Product</a>`)}
-    <div class="detail-scroll"><section class="card" id="productResults" aria-label="Products"></section></div>
+    <div class="detail-scroll list-view"><section class="card card-clip list-card" id="productResults" aria-label="Products"></section></div>
   </div>`;
   refreshProducts();
 }
@@ -22,7 +22,7 @@ function refreshProducts() {
   const pages = Math.max(1, Math.ceil(rows.length / productList.size));
   productList.page = Math.min(productList.page, pages - 1);
   const start = productList.page * productList.size;
-  patchListTable($('#productResults'), `<table class="tbl">
+  patchListTable($('#productResults'), `<div class="table-scroll"><table class="tbl">
       <thead><tr>${sortHeader('id', 'Name ID')}${sortHeader('description', 'Product Description', 'hide-compact')}${sortHeader('clearingHouse', 'Clearing House', 'hide-compact')}<th class="acts"><span class="sr">Actions</span></th></tr></thead>
       <tbody>${rows.slice(start, start + productList.size).map(p => `<tr data-href="${esc(productHref(p.id))}">
         <td><a class="firm-name mono" href="${esc(productHref(p.id))}">${esc(p.id)}</a><span class="firm-id show-compact">${esc(p.description)}</span></td>
@@ -34,7 +34,7 @@ function refreshProducts() {
           <a class="icon-btn" href="${esc(productHref(p.id, 'copy'))}" aria-label="Copy ${esc(p.id)}" title="Copy">${icon('copy')}</a>
         </td>
       </tr>`).join('')}</tbody>
-    </table>
+    </table></div>
     ${pagerHTML(rows.length)}`);
 }
 
