@@ -126,7 +126,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Login:** centred form with no card, logo above "Welcome back", eye icon on the password, no side panel or decorative shapes.
 - **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in rows.
-- **Instrument list:** keep the area above the table to one row. Product, Symbol, State and Type filters apply live, the other filters sit behind More Filters, and Reset only shows when a filter is active. Export, settlement price actions, Resume and Halt All sit in one Actions menu, not a row of buttons. Row actions are an Edit icon and a More menu rather than seven icons, and the actions column stays visible while the wide table scrolls.
+- **Instrument list:** keep the area above the table to one row. Product, Symbol, State and Type filters apply live, the other filters sit behind More Filters, and Reset only shows when a filter is active. Export, settlement price actions, Resume and Halt All sit in one Actions menu, not a row of buttons. Row actions are View and Edit icons and a More menu rather than seven icons, and the actions column stays visible while the wide table scrolls.
 - **Firm pages:** fixed header with underlined tabs. Only the content scrolls.
 - **Forms:** real field order flowing into responsive columns, 44px inputs, Save then Cancel in a footer pinned to the bottom left.
 - **Toasts:** top centre, one at a time, no Undo.

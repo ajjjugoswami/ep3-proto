@@ -132,6 +132,7 @@ function instrumentRowHTML(i) {
     <td class="num">${stat(s.lastPrice, 'lastTradeSetTime')}</td>
     <td class="num">${stat(s.settlementPrice, 'settlementSetTime')}</td>
     <td class="acts">
+      <a class="icon-btn" href="${esc(instHref(i.id))}" aria-label="View ${esc(i.id)}" title="View">${icon('eye')}</a>
       ${instEditable(i) ? `<a class="icon-btn" href="${esc(instHref(i.id, 'edit'))}" aria-label="Edit ${esc(i.id)}" title="Edit">${icon('edit')}</a>` : ''}
       <button class="icon-btn" type="button" data-act="inst-row-menu" data-id="${esc(i.id)}" aria-haspopup="menu" aria-label="More actions for ${esc(i.id)}" title="More">${icon('more')}</button>
     </td>
@@ -177,7 +178,6 @@ function instrumentMenuItems(i, onDetail) {
   const editable = instEditable(i);
   return [
     ...(onDetail ? [] : [
-      { label: 'View', icon: 'eye', run: () => go(instHref(i.id)) },
       { label: 'Change State', icon: 'warn', disabled: !editable, reason: EDIT_BLOCKED, run: () => go(instStateHref(i.id)) },
       { label: 'Edit', icon: 'edit', disabled: !editable, reason: EDIT_BLOCKED, run: () => go(instHref(i.id, 'edit')) },
       { label: 'Copy', icon: 'copy', run: () => go(instHref(i.id, 'copy')) },

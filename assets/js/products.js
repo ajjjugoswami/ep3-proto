@@ -30,6 +30,7 @@ function refreshProducts() {
         <td class="hide-compact">${esc(p.description)}</td>
         <td class="hide-compact">${esc(p.clearingHouse)}</td>
         <td class="acts">
+          <a class="icon-btn" href="${esc(productHref(p.id))}" aria-label="View ${esc(p.id)}" title="View">${icon('eye')}</a>
           <a class="icon-btn" href="${esc(productHref(p.id, 'edit'))}" aria-label="Edit ${esc(p.id)}" title="Edit">${icon('edit')}</a>
           <a class="icon-btn" href="${esc(productHref(p.id, 'copy'))}" aria-label="Copy ${esc(p.id)}" title="Copy">${icon('copy')}</a>
         </td>
