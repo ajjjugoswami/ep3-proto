@@ -443,7 +443,7 @@ h1[tabindex="-1"]:focus-visible { outline: none; }
 .banner > span { flex: 1 1 220px; }
 .banner.bad { background: var(--bad-bg); color: var(--bad-ink); }
 .banner.warn { background: var(--warn-bg); color: var(--warn-ink); }
-.split { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 24px; align-items: start; }
+.split { display: grid; grid-template-columns: 224px minmax(0, 1fr); gap: 24px; align-items: start; }
 .rail { position: sticky; top: 0; }
 .rail-nav { border-left: 1px solid var(--line); }
 .rail-nav button { display: flex; align-items: center; width: 100%; min-height: 30px; margin-left: -1px; padding: 3px 12px; border-left: 2px solid transparent; color: var(--ink-3); font-weight: 500; text-align: left; transition: color .14s, border-color .14s; }
@@ -849,10 +849,6 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 .tabs { gap: 4px; }
 .tabs a { padding: 0 14px; border-radius: 8px 8px 0 0; }
 .tabs a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
-.refresh-info { display: flex; align-items: center; gap: 8px; margin-right: 12px; color: var(--accent); }
-.refresh-info div { display: flex; flex-direction: column; }
-.refresh-info small { color: var(--ink-3); font-size: 11.5px; }
-.refresh-info strong { color: var(--ink); font-size: 13px; font-weight: 600; }
 .control-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 11px 14px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-1); }
 .control-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .control-icon { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
@@ -880,6 +876,5 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 .page-gap { padding: 0 2px; color: var(--ink-3); }
 @media (max-width: 680px) {
   .pager-actions { flex-wrap: wrap; justify-content: center; }
-  .refresh-info { width: 100%; margin-right: 0; }
   .control-bar .head-acts { width: 100%; }
 }

@@ -98,7 +98,6 @@ function renderInstruments() {
   listCtl = { state: instList, refresh: refreshInstruments, removeFilter: removeInstrumentFilter, noun: 'instruments' };
   $('#view').innerHTML = `<div class="detail-page">
     ${moduleHeadHTML('instruments', `
-      <div class="refresh-info">${icon('clock')}<div><small>Last MKT Data Refresh</small><strong id="lastRefresh">${esc(lastRefreshLabel())}</strong></div></div>
       <button class="btn btn-outline" type="button" data-act="inst-refresh">${icon('refresh')}Refresh MKT Data</button>
       <a class="btn btn-primary" href="instrument.html?mode=new">${icon('plus')}Add Instrument</a>`)}
     <div class="detail-scroll list-view">
@@ -115,11 +114,6 @@ function renderInstruments() {
     </div>
   </div>`;
   refreshInstruments();
-}
-
-function lastRefreshLabel() {
-  const latest = market.lastRefresh || market.instruments.map(i => (i.stats || {}).lastTradeSetTime || '').sort().pop();
-  return latest ? formatWhen(latest) : 'Not refreshed yet';
 }
 
 function refreshInstrumentFilters() {
@@ -280,9 +274,7 @@ function refreshMarketData() {
     s.low = String(Math.min(Number(s.low), Number(s.lastPrice)));
     s.lastTradeSetTime = isoDateTime(new Date());
   });
-  market.lastRefresh = isoDateTime(new Date());
   saveMarket();
   refreshInstruments();
-  $('#lastRefresh').textContent = lastRefreshLabel();
   toast('Market data refreshed.');
 }
