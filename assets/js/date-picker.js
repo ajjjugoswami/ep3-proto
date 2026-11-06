@@ -125,7 +125,7 @@ function renderDatePicker(focusSelector) {
     </div>`;
   $$('.date-col', s.pop).forEach(col => {
     const on = $('[aria-pressed="true"]', col);
-    if (on) col.scrollTop = on.offsetTop - col.offsetTop - (col.clientHeight - on.offsetHeight) / 2;
+    if (on) col.scrollTop = on.offsetTop - (col.clientHeight - on.offsetHeight) / 2;
   });
   const target = focusSelector && $(focusSelector, s.pop);
   if (target) target.focus({ preventScroll: true });
