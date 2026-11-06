@@ -54,6 +54,7 @@ function startForm(mode, source, presetType) {
   form = {
     mode, draft: base, original: clone(base), errors: {}, idTouched: false, saving: false,
     presetType: presetType && TYPES[presetType] ? presetType : null,
+    open: new Set(),
   };
   renderFormShell();
 }
@@ -72,36 +73,52 @@ function formFieldRow(x, f) {
   return fieldRow(x, f, form.errors, 'firm');
 }
 
-function formRowsFor(s) {
-  const f = form.draft;
-  const fields = s.fields.filter(x => visible(x, f));
-  const ordered = form.mode === 'create' ? [...fields].sort((a, b) => (b.kind === 'type') - (a.kind === 'type')) : fields;
-  return ordered.map(x => formFieldRow(x, f)).join('');
+const FIRM_FORM_ORDER = [
+  'name', 'id', 'type', 'state',
+  'applyCommissionsAsSpread', 'skipCommissionBalanceAdjustment', 'skipRiskAndCurrencyChecks', 'hasSponsoredDirectMarketAccess', 'isDisintermediated',
+  'participantType', 'organizationType', 'legalEntityIdentifier', 'legalName', 'businessContactName', 'email', 'phoneNumber',
+  'usTaxpayerIdentificationNumber', 'designatedSelfRegulatoryOrganization', 'designatedExaminingAuthority',
+  'mainAddress1', 'mainAddress2', 'mainAddressCity', 'mainAddressState', 'mainAddressPostalCode', 'mainAddressCountryCode',
+];
+
+const firmFieldByKey = key => SECTIONS.flatMap(s => s.fields || []).find(x => x.k === key);
+
+function formCollapseHTML(s) {
+  const rows = form.draft[s.collection] || [];
+  return `<details class="card form-collapse" data-sec="${s.id}" ${form.open.has(s.id) ? 'open' : ''}>
+    <summary>
+      <span class="section-title">${esc(s.title)}</span>
+      <span class="form-collapse-meta">${rows.length ? `<span>${rows.length}</span>` : ''}${icon('up')}</span>
+    </summary>
+    <div class="form-collapse-body">
+      ${collectionHTML(s.collection, rows, { editable: true })}
+      ${s.note ? `<p class="section-note">${esc(s.note)}</p>` : ''}
+    </div>
+  </details>`;
 }
 
 function formBodyHTML() {
   const f = form.draft;
   if (form.entity) {
-    return `<div class="card form-card"><div class="form-grid">${form.entity.fields.map(x => formFieldRow(x, f)).join('')}</div></div>`;
+    return `<div class="card form-card"><div class="form-grid form-list">${form.entity.fields.map(x => formFieldRow(x, f)).join('')}</div></div>`;
   }
-  const sections = sectionsFor(f);
-  const html = sections.map(s => `<section class="section" id="sec-${s.id}">
-    ${s.collection ? collectionHTML(s.collection, f[s.collection] || [], { editable: true, heading: true }) : `
-      <div class="section-head"><h2 class="section-title">${esc(s.id === 'identity' ? 'Firm Details' : s.title)}</h2></div>
-      <div class="card form-card"><div class="form-grid">${formRowsFor(s)}</div></div>`}
-    ${s.note ? `<p class="section-note">${esc(s.note)}</p>` : ''}
-  </section>`).join('');
-  return form.mode === 'edit' ? `<div class="split">${railHTML(sections)}<div class="sections">${html}</div></div>` : html;
+  const rows = FIRM_FORM_ORDER.map(firmFieldByKey).filter(x => visible(x, f)).map(x => formFieldRow(x, f)).join('');
+  const clearing = SECTIONS.find(s => s.id === 'clearing');
+  const clearingHTML = isParticipant(f)
+    ? `<div class="form-subhead"><h2 class="section-title">${esc(clearing.title)}</h2><p>${esc(clearing.note)}</p></div>${clearing.fields.map(x => formFieldRow(x, f)).join('')}`
+    : '';
+  return `<div class="card form-card"><div class="form-grid form-list">${rows}${clearingHTML}</div></div>
+    ${SECTIONS.filter(s => s.collection).map(formCollapseHTML).join('')}`;
 }
 
 function dockHTML(backHref, saveLabel) {
   form.saveLabel = saveLabel;
   return `<div class="dock">
-    <span class="dock-status" id="dockStatus"></span>
     <div class="dock-acts">
-      <a class="btn btn-plain" href="${esc(backHref)}">Cancel</a>
       <button class="btn btn-primary" type="submit" id="saveBtn">${esc(saveLabel)}</button>
+      <a class="btn btn-plain" href="${esc(backHref)}">Cancel</a>
     </div>
+    <span class="dock-status" id="dockStatus"></span>
   </div>`;
 }
 
@@ -126,12 +143,11 @@ function renderFormShell() {
         ${detailHeadHTML(firmById(form.original.id), '', true)}
         <div class="detail-scroll detail-form">
           <form id="firmForm" novalidate>
-            <div id="formBody">${formBodyHTML()}</div>
+            <div class="form-stack" id="formBody">${formBodyHTML()}</div>
             ${dockHTML(backHref, 'Save Changes')}
           </form>
         </div>
       </div>`;
-    startSpy();
   }
   updateDock();
 }

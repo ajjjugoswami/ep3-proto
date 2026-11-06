@@ -201,6 +201,12 @@ document.addEventListener('change', e => {
   updateDock();
 });
 
+document.addEventListener('toggle', e => {
+  if (!form || !form.open || !e.target.matches || !e.target.matches('details[data-sec]')) return;
+  if (e.target.open) form.open.add(e.target.dataset.sec);
+  else form.open.delete(e.target.dataset.sec);
+}, true);
+
 document.addEventListener('focusout', e => {
   const t = e.target;
   if (!form || !t.dataset || !t.dataset.field || t.closest('#sheet')) return;
