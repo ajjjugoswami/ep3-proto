@@ -125,7 +125,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **App shell:** flat sidebar, with the content in a large rounded panel and thin scrollbars inset from the corners.
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Login:** centred form with no card, logo above "Welcome back", eye icon on the password, no side panel or decorative shapes.
-- **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in rows.
+- **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in the name cells. Row actions are View and Edit icons and a More menu, the same as the instrument list.
 - **Instrument list:** keep the area above the table to one row. Product, Symbol, State and Type filters apply live, the other filters sit behind More Filters, and Reset only shows when a filter is active. Export, settlement price actions, Resume and Halt All sit in one Actions menu, not a row of buttons. Row actions are View and Edit icons and a More menu rather than seven icons, and the actions column stays visible while the wide table scrolls.
 - **Firm pages:** fixed header with underlined tabs. Only the content scrolls.
 - **Forms:** real field order flowing into responsive columns, 44px inputs, Save then Cancel in a footer pinned to the bottom left.
@@ -143,7 +143,6 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 
 - An account's own tabs: Users, Positions, Balances, Ledger, Whitelist, Commissions, Associations, Bank Accounts and Position Limits.
 - Every sidebar page except Firms and Instruments, including Change Password, plus Register on the login page. They show a "not part of this prototype" message.
-- The Calendars week view lists events by day, where the real UI has an hourly grid.
 - Pagination on firm tabs, and the firm view page still groups fields where the real UI shows a plain list.
 - Firm service pages use a back link, where the real UI keeps the firm tabs.
 

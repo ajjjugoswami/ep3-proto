@@ -3,14 +3,13 @@
 function firmMenuItems(f, onDetail) {
   if (f.deleted) {
     return [
-      ...(onDetail ? [] : [{ label: 'View Firm', icon: 'eye', run: () => go(hrefFor(f.id)) }, { label: 'Open in New Tab', icon: 'new-tab', run: () => window.open(hrefFor(f.id), '_blank') }, '-']),
+      ...(onDetail ? [] : [{ label: 'Open in New Tab', icon: 'new-tab', run: () => window.open(hrefFor(f.id), '_blank') }, '-']),
       { label: 'Restore Firm', icon: 'restore', run: () => restoreFirm(f.id) },
     ];
   }
   const suspended = f.state === 'suspended';
   return [
     ...(onDetail ? [] : [
-      { label: 'View Firm', icon: 'eye', run: () => go(hrefFor(f.id)) },
       { label: 'Edit Firm', icon: 'edit', run: () => go(hrefFor(f.id, 'edit')) },
       { label: 'Open in New Tab', icon: 'new-tab', run: () => window.open(hrefFor(f.id), '_blank') },
       '-',
@@ -129,7 +128,7 @@ function skeleton() {
     <td class="hide-compact"><span class="skel skel-id skel-w${(i + 1) % 3}"></span></td>
     <td class="hide-compact"><span class="skel skel-text"></span></td>
     <td><span class="skel skel-pill"></span></td>
-    <td class="acts"><span class="skel-acts"><span class="skel skel-icon hide-compact"></span><span class="skel skel-icon"></span></span></td>
+    <td class="acts"><span class="skel-acts"><span class="skel skel-icon hide-compact"></span><span class="skel skel-icon hide-compact"></span><span class="skel skel-icon"></span></span></td>
   </tr>`).join('');
   return `<div aria-hidden="true">
     <table class="tbl skel-table">
@@ -206,6 +205,7 @@ function rowHTML(f) {
     <td class="hide-compact">${esc(t.label)}</td>
     <td>${statePill(f)}</td>
     <td class="acts">
+      <a class="icon-btn hide-compact" href="${esc(hrefFor(f.id))}" aria-label="View ${esc(f.name)}" title="View">${icon('eye')}</a>
       ${f.deleted
         ? `<button class="btn btn-tint" type="button" data-act="restore" data-id="${esc(f.id)}">Restore</button>`
         : `<a class="icon-btn hide-compact" href="${esc(hrefFor(f.id, 'edit'))}" aria-label="Edit ${esc(f.name)}" title="Edit">${icon('edit')}</a>
