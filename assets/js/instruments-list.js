@@ -1,7 +1,7 @@
 'use strict';
 
 const blankInstrumentFilters = () => Object.fromEntries(INSTRUMENT_FILTERS.map(f => [f.k, '']));
-const instList = { page: 0, size: 10, showFilters: true, sort: '', dir: 1, ...blankInstrumentFilters(), ...readListState('instList') };
+const instList = { page: 0, size: 10, showFilters: !isPhoneWidth(), sort: '', dir: 1, ...blankInstrumentFilters(), ...readListState('instList') };
 const instSelected = new Set();
 
 const instStat = (valueKey, setTime) => i => {
@@ -150,19 +150,19 @@ function instrumentRowHTML(i) {
   const stat = (value, setTime) => (s[setTime] ? px(i, value) : '');
   return `<tr data-href="${esc(instHref(i.id))}" data-inst="${esc(i.id)}">
     <td class="check-cell"><input class="inst-check" type="checkbox" value="${esc(i.id)}" ${instSelected.has(i.id) ? 'checked' : ''} aria-label="Select ${esc(i.id)}"></td>
-    <td>${esc(i.productId)}</td>
-    <td><a class="firm-name" href="${esc(instHref(i.id))}">${esc(i.id)}</a></td>
+    <td data-label="Product Name">${esc(i.productId)}</td>
+    <td class="inst-id"><a class="firm-name" href="${esc(instHref(i.id))}">${esc(i.id)}</a></td>
     <td class="desc-cell" title="${esc(i.description)}">${esc(i.description)}</td>
-    <td><span class="pill ${i.nonTradable ? 'pill-closed' : 'pill-active'}">${i.nonTradable ? 'No' : 'Yes'}</span></td>
-    <td class="house-cell" title="${esc(i.clearingHouse)}">${esc(i.clearingHouse)}</td>
-    <td><span class="pill ${i.isScheduled ? 'pill-preopen' : 'pill-halted'}">${i.isScheduled ? 'Scheduled' : 'Manual'}</span></td>
-    <td>${statusPill(i.state)}</td>
-    <td class="num">${stat(s.open, 'openSetTime')}</td>
-    <td class="num">${stat(s.high, 'highSetTime')}</td>
-    <td class="num">${stat(s.low, 'lowSetTime')}</td>
-    <td class="num">${stat(s.close, 'closeSetTime')}</td>
-    <td class="num">${stat(s.lastPrice, 'lastTradeSetTime')}</td>
-    <td class="num">${stat(s.settlementPrice, 'settlementSetTime')}</td>
+    <td data-label="Tradable"><span class="pill ${i.nonTradable ? 'pill-closed' : 'pill-active'}">${i.nonTradable ? 'No' : 'Yes'}</span></td>
+    <td class="house-cell" data-label="Clearing House" title="${esc(i.clearingHouse)}">${esc(i.clearingHouse)}</td>
+    <td data-label="Schedule"><span class="pill ${i.isScheduled ? 'pill-preopen' : 'pill-halted'}">${i.isScheduled ? 'Scheduled' : 'Manual'}</span></td>
+    <td class="inst-state">${statusPill(i.state)}</td>
+    <td class="num" data-label="Open">${stat(s.open, 'openSetTime')}</td>
+    <td class="num" data-label="High">${stat(s.high, 'highSetTime')}</td>
+    <td class="num" data-label="Low">${stat(s.low, 'lowSetTime')}</td>
+    <td class="num" data-label="Close">${stat(s.close, 'closeSetTime')}</td>
+    <td class="num" data-label="Last PX">${stat(s.lastPrice, 'lastTradeSetTime')}</td>
+    <td class="num" data-label="Settl-PX">${stat(s.settlementPrice, 'settlementSetTime')}</td>
     <td class="acts">
       <a class="icon-btn" href="${esc(instHref(i.id))}" aria-label="View ${esc(i.id)}" title="View">${icon('eye')}</a>
       ${instEditable(i) ? `<a class="icon-btn" href="${esc(instHref(i.id, 'edit'))}" aria-label="Edit ${esc(i.id)}" title="Edit">${icon('edit')}</a>` : ''}

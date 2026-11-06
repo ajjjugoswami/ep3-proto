@@ -72,7 +72,7 @@ function collectionHTML(key, rows, { editable, heading }) {
   const head = heading ? `<div class="section-head"><h2 class="section-title">${esc(c.title)}${tipHTML(c.tip)}</h2>${addBtn}</div>` : `<div class="section-head head-end">${addBtn}</div>`;
   const body = !rows.length
     ? `<div class="empty small"><p>${esc(c.empty)}</p></div>`
-    : `<table class="tbl">
+    : `<div class="table-scroll"><table class="tbl">
         <thead><tr>${columns.map(([, label, sec, kind]) => `<th class="${sec ? 'hide-compact' : ''} ${kind === 'num' ? 'num' : ''}">${esc(label)}</th>`).join('')}${editable ? '<th class="acts"><span class="sr">Actions</span></th>' : ''}</tr></thead>
         <tbody>${rows.map((r, i) => `<tr>
           ${columns.map(([k, , sec, kind], ci) => `<td class="${sec ? 'hide-compact' : ''} ${kind === 'num' ? 'num' : ''}">${cellHTML(r[k], kind, ci === 0)}</td>`).join('')}
@@ -81,7 +81,7 @@ function collectionHTML(key, rows, { editable, heading }) {
             <button class="icon-btn danger" type="button" data-act="rec-del" data-col="${key}" data-i="${i}" aria-label="Remove ${esc(recordLabel(c, r))}" title="Remove">${icon('trash')}</button>
           </td>` : ''}
         </tr>`).join('')}</tbody>
-      </table>`;
+      </table></div>`;
   return `${head}<div class="card">${body}</div>`;
 }
 

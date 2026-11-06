@@ -59,7 +59,10 @@ let spy = null;
 let spyLock = 0;
 let assocState = null;
 let firstList = session.get('listShown') !== '1';
-const list = { q: '', type: '', state: '', deleted: false, showFilters: true, sort: 'seed', dir: 1, page: 0, size: 10, ...readListState('firmsList') };
+function isPhoneWidth() {
+  return matchMedia('(max-width: 680px)').matches;
+}
+const list = { q: '', type: '', state: '', deleted: false, showFilters: !isPhoneWidth(), sort: 'seed', dir: 1, page: 0, size: 10, ...readListState('firmsList') };
 let listCtl = { state: list, refresh: () => refreshList(), removeFilter: key => removeFirmFilter(key), noun: 'firms' };
 
 const persist = () => storage.set(STORE_KEY, JSON.stringify(firms));
