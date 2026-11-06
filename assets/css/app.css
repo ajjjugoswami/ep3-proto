@@ -684,6 +684,12 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 .toast span { padding-right: 8px; overflow-wrap: anywhere; }
 @keyframes toast { from { opacity: 0; transform: translateY(-14px) scale(.96); } }
 
+@view-transition { navigation: auto; }
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}
+.sidebar { view-transition-name: sidebar; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .12s; }
 .auth .sidebar, .auth .topbar, .auth .scrim { display: none; }
 .auth .main { inset: 0; border: 0; border-radius: 0; box-shadow: none; background: var(--shell); }
 .login { position: relative; display: flex; min-height: 100%; }

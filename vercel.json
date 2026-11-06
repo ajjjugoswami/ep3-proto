@@ -1,4 +1,15 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/:page([a-z-]+)", "destination": "/:page.html" }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }
+      ]
+    }
+  ]
 }
