@@ -126,10 +126,10 @@ Instruments module, from `pages/Instruments.js`, `InstrumentForm.js` and `Produc
 Keep these unless told otherwise. The user wants a simple admin tool, not a fancy one.
 
 - **Font:** Geist and Geist Mono, not Montserrat. Google Fonts is loaded from a CDN.
-- **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark uses neutral near-black with white text. Light uses a neutral off-white sidebar and white panel. In both themes, sidebar icons are blue and the selected one is green.
+- **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark uses neutral near-black with white text. Light uses a white sidebar and white panel, separated by the panel's border. In both themes, sidebar icons are blue and the selected one is green.
 - **App shell:** flat sidebar, with the content in a large rounded panel and thin scrollbars inset from the corners.
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
-- **Login:** centred form with no card, logo above "Welcome back", eye icon on the password, no side panel or decorative shapes.
+- **Log in and Register:** a white card centred on a blue gradient page, with no illustration or side panel. The user doesn't want Remember me or Forgot password.
 - **Change State:** opens as a dialog over the current page, for one instrument or a selection, not a separate page. Save applies straight away with no second confirmation. EOD actions and resolution are in the same dialog and do ask first.
 - **Filter chips:** on the firm and instrument lists, each active filter shows as a chip below the filters, with an X to remove it and a Clear all link. These replace the Reset button. Show Deleted is a toggle, not a chip.
 - **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in the name cells. Row actions are View and Edit icons and a More menu, the same as the instrument list.

@@ -266,7 +266,7 @@ document.addEventListener('submit', async e => {
       $(`[name=${String(fd.get('username')).trim() ? 'password' : 'username'}]`, e.target).focus();
       return;
     }
-    setLoginBusy(e.target, 'Logging In…');
+    setLoginBusy(e.target, 'Signing In…');
     await wait(500);
     storage.set(SESSION_KEY, '1');
     go('firms.html');

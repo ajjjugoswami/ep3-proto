@@ -88,26 +88,22 @@ async function submitRegister(formEl) {
 function renderRegister() {
   document.title = 'Register · EP3 Admin';
   document.body.classList.add('auth');
-  $('#view').innerHTML = `
-    <div class="login">
-      <div class="login-side">
-        <form class="login-form" id="registerForm" novalidate>
-          ${logo('login-logo')}
-          <h1 tabindex="-1">Register</h1>
-          <p>Paste your registration token and choose a password. Your username comes from the token.</p>
-          ${loginField('Token', `
-            <input class="field" name="token" autocomplete="off" autocapitalize="off" spellcheck="false">
-            ${registerErrorBox('token')}
-            <span class="login-hint">No token? <button type="button" data-act="register-sample">Use a sample token</button></span>`)}
-          ${loginField('Username', '<input class="field" name="username" autocomplete="username" disabled>')}
-          ${loginField('Password', `${passwordInput('password', 'new-password')}${registerErrorBox('password')}`)}
-          ${loginField('Confirm Password', `${passwordInput('matchpassword', 'new-password')}${registerErrorBox('matchpassword')}`)}
-          <div class="row-err" id="registerErr" role="alert" hidden></div>
-          <button class="btn btn-primary" type="submit">Register</button>
-          <p class="login-foot">Already registered? <a href="index.html">Log In</a></p>
-        </form>
-      </div>
-    </div>`;
+  $('#view').innerHTML = authPageHTML(`
+    <form class="login-form" id="registerForm" novalidate>
+      ${logo('login-logo')}
+      <h2 tabindex="-1">Create your account</h2>
+      <p>Paste your registration token and choose a password</p>
+      ${loginField('Token', `
+        ${iconInput('key', '<input class="field" name="token" placeholder="Enter your token" autocomplete="off" autocapitalize="off" spellcheck="false">')}
+        ${registerErrorBox('token')}
+        <span class="login-hint">No token? <button type="button" data-act="register-sample">Use a sample token</button></span>`)}
+      ${loginField('Username', iconInput('user', '<input class="field" name="username" placeholder="Filled in from your token" autocomplete="username" disabled>'))}
+      ${loginField('Password', `${passwordInput('password', 'new-password', 'Enter your password')}${registerErrorBox('password')}`)}
+      ${loginField('Confirm Password', `${passwordInput('matchpassword', 'new-password', 'Confirm your password')}${registerErrorBox('matchpassword')}`)}
+      <div class="row-err" id="registerErr" role="alert" hidden></div>
+      <button class="btn btn-primary" type="submit">Register${icon('arrow')}</button>
+      <p class="login-foot">Already have an account? <a href="index.html">Sign In</a></p>
+    </form>`);
   $('#registerForm').addEventListener('input', onRegisterInput);
   $('#registerForm [name=token]').focus();
 }

@@ -73,9 +73,14 @@ function showLicense() {
 
 const loginField = (label, control) => `<label class="login-field"><span>${esc(label)}</span>${control}</label>`;
 
-const passwordInput = (name, autocomplete) => `
-  <span class="login-input">
-    <input class="field" name="${name}" type="password" autocomplete="${autocomplete}">
+const iconInput = (ic, input) => `<span class="login-input has-icon">${icon(ic)}${input}</span>`;
+
+const authPageHTML = form => `<div class="login">${form}</div>`;
+
+const passwordInput = (name, autocomplete, placeholder) => `
+  <span class="login-input has-icon">
+    ${icon('lock')}
+    <input class="field" name="${name}" type="password" autocomplete="${autocomplete}" placeholder="${placeholder}">
     <button class="login-show" type="button" data-act="password-show" aria-pressed="false" aria-label="Show password" title="Show password">${icon('eye')}</button>
   </span>`;
 
@@ -109,20 +114,16 @@ function setLoginBusy(formEl, label) {
 function renderLogin() {
   document.title = 'Log In · EP3 Admin';
   document.body.classList.add('auth');
-  $('#view').innerHTML = `
-    <div class="login">
-      <div class="login-side">
-        <form class="login-form" id="loginForm" novalidate>
-          ${logo('login-logo')}
-          <h1 tabindex="-1">Welcome back</h1>
-          <p>Log in to the EP3 admin console.</p>
-          ${loginField('Username', '<input class="field" name="username" autocomplete="username" autocapitalize="off" spellcheck="false">')}
-          ${loginField('Password', passwordInput('password', 'current-password'))}
-          <div class="row-err" id="loginErr" role="alert" hidden></div>
-          <button class="btn btn-primary" type="submit">Log In${icon('forward')}</button>
-          <p class="login-foot">Need to register? <a href="index.html?register=true">Register</a></p>
-        </form>
-      </div>
-    </div>`;
+  $('#view').innerHTML = authPageHTML(`
+    <form class="login-form" id="loginForm" novalidate>
+      ${logo('login-logo')}
+      <h2 tabindex="-1">Welcome back</h2>
+      <p>Sign in to the EP3 admin console</p>
+      ${loginField('Username', iconInput('user', `<input class="field" name="username" placeholder="Enter your username" autocomplete="username" autocapitalize="off" spellcheck="false">`))}
+      ${loginField('Password', passwordInput('password', 'current-password', 'Enter your password'))}
+      <div class="row-err" id="loginErr" role="alert" hidden></div>
+      <button class="btn btn-primary" type="submit">Sign In${icon('arrow')}</button>
+      <p class="login-foot">Need an account? <a href="index.html?register=true">Register</a></p>
+    </form>`);
   $('#loginForm [name=username]').focus();
 }
