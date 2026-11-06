@@ -699,12 +699,13 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 @keyframes menu { from { opacity: 0; transform: scale(.94); } }
 .menu button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 32px; padding: 4px 10px; border-radius: 9px; text-align: left; font-weight: 500; }
 .menu button .i { width: 16px; height: 16px; color: var(--ink-3); }
-.menu button:hover, .menu button:focus { background: var(--accent-fill); color: #fff; outline: none; }
-.menu button:hover .i, .menu button:focus .i { color: #fff; }
+.menu button:focus { outline: none; }
+.menu button:hover, .menu button:focus-visible { background: var(--surface-3); color: var(--ink); }
+.menu button:hover .i, .menu button:focus-visible .i { color: var(--ink); }
 .menu button.danger { color: var(--bad-ink); }
 .menu button.danger .i { color: var(--bad-ink); }
-.menu button.danger:hover, .menu button.danger:focus { background: var(--bad-fill); color: #fff; }
-.menu button.danger:hover .i, .menu button.danger:focus .i { color: #fff; }
+.menu button.danger:hover, .menu button.danger:focus-visible { background: var(--bad-bg); color: var(--bad-ink); }
+.menu button.danger:hover .i, .menu button.danger:focus-visible .i { color: var(--bad-ink); }
 .menu button:disabled, .menu button:disabled:hover { background: none; color: var(--ink-3); opacity: .55; cursor: default; }
 .menu button:disabled .i, .menu button:disabled:hover .i { color: var(--ink-3); }
 .menu hr { border: 0; height: 1px; margin: 4px 10px; background: var(--line-strong); }
