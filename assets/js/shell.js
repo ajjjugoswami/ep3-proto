@@ -14,14 +14,8 @@ function renderSidebar() {
           <div class="side-label">${esc(g.label)}</div>
           ${g.items.map(([label, ic, live, act]) => live
             ? `<a class="nav-item" href="firms.html" aria-current="page" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></a>`
-            : `<button class="nav-item" type="button" data-act="${act || 'nav-soon'}" data-label="${esc(label)}" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}</span></button>`).join('')}
+            : `<button class="nav-item" type="button" data-act="${act || 'nav-soon'}" data-label="${esc(label)}" title="${esc(label)}">${icon(ic)}<span class="nav-text">${esc(label)}${act === 'license' ? `<small class="nav-sub">Expires ${esc(licenseExpiry(APP_INFO.expires))}</small>` : ''}</span></button>`).join('')}
         </div>`).join('')}
-      <div class="side-info">
-        <span class="mono">${esc(APP_INFO.appVersion)}</span>
-        <span>${esc(APP_INFO.client)}</span>
-        <span>Version ${esc(APP_INFO.licenseVersion)}</span>
-        <span>Expires ${esc(licenseExpiry(APP_INFO.expires))}</span>
-      </div>
     </div>
     <div class="side-foot">
       <div class="appearance">
@@ -31,6 +25,10 @@ function renderSidebar() {
         </div>
       </div>
       <button class="btn btn-logoff" type="button" data-act="logout" title="Log Off">${icon('logout')}<span class="nav-text">Log Off</span></button>
+      <div class="side-info">
+        <span>${esc(APP_INFO.client)}</span>
+        <span class="mono">${esc(APP_INFO.appVersion)}</span>
+      </div>
     </div>`;
 }
 

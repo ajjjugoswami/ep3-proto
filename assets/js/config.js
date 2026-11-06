@@ -1,6 +1,6 @@
 'use strict';
 
-const STORE_KEY = 'ep3.firms.prototype.v2';
+const STORE_KEY = 'ep3.firms.prototype.v3';
 const SESSION_KEY = 'ep3.firms.prototype.session';
 const SIDE_KEY = 'ep3.firms.prototype.side';
 const THEME_KEY = 'ep3.firms.prototype.theme';
