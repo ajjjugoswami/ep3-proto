@@ -688,14 +688,17 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 .login-field .field { min-height: 46px; padding: 10px 14px; border-radius: 10px; background: var(--surface); border-color: var(--line-strong); font-size: 15px; }
 .login-field .field:hover { background: var(--surface); border-color: var(--ink-3); }
 .login-field .field:focus { background: var(--surface); border-color: var(--accent); }
+.login-field .field[aria-invalid="true"] { border-color: var(--bad-ink); background: var(--bad-bg); }
 .login-input .field { padding-right: 48px; }
+.login-hint { display: block; margin-top: 6px; color: var(--ink-3); font-size: 12.5px; }
+.login-hint button { color: var(--accent); font-weight: 560; }
 .login-show { position: absolute; top: 50%; right: 7px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 7px; color: var(--ink-3); transform: translateY(-50%); }
 .login-show:hover { background: var(--nav-active); color: var(--ink); }
 .login-form .btn-primary { width: 100%; min-height: 46px; margin-top: 6px; border-radius: 10px; font-size: 15px; box-shadow: none; }
 .login-form .btn-primary .i { transition: transform .2s var(--ease); }
 .login-form .btn-primary:hover .i { transform: translateX(3px); }
 .login-foot { margin-top: 22px; text-align: center; color: var(--ink-3); }
-.login-foot button { color: var(--accent); font-weight: 560; }
+.login-foot a { color: var(--accent); font-weight: 560; }
 @media (max-width: 680px) {
   .login-side { padding: 18px 16px; }
   .login-form { padding-bottom: 32px; }

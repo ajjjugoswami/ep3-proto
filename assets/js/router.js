@@ -70,6 +70,7 @@ function route() {
 
   if (PAGE === 'login') {
     if (signedIn) location.replace('firms.html');
+    else if (String(param('register')).toLowerCase() === 'true') renderRegister();
     else renderLogin();
     return;
   }

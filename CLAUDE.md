@@ -16,7 +16,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 
 | Page | Screen | Query params |
 |---|---|---|
-| `index.html` | Log in | |
+| `index.html` | Log in, or Register with `register=true` | `register` |
 | `firms.html` | Firm list | |
 | `firm.html` | Firm profile and tabs | `id`, `tab` |
 | `firm-new.html` | Create a firm | `type` (optional preset) |
@@ -46,6 +46,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `js/ui.js` | Toasts, confirm dialog, menus, custom dropdowns |
 | `js/date-picker.js` | Themed date, date-time and time pickers, and `formatWhen` |
 | `js/shell.js` | Sidebar, theme, login page, license dialog |
+| `js/register.js` | Register page, token parsing and password check |
 | `js/firms-list.js` | Firm list, filters, sorting, pagination, firm actions |
 | `js/firm-detail.js` | Firm header and tabs, profile, left section menu, shared read rows and collections |
 | `js/firm-tabs.js` | Users, Accounts, Position Limits, Associations and Services tab content |
@@ -142,7 +143,8 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 ## Not built yet
 
 - An account's own tabs: Users, Positions, Balances, Ledger, Whitelist, Commissions, Associations, Bank Accounts and Position Limits.
-- Every sidebar page except Firms and Instruments, including Change Password, plus Register on the login page. They show a "not part of this prototype" message.
+- Every sidebar page except Firms and Instruments, including Change Password. They show a "not part of this prototype" message.
+- Multi-factor enrollment on login and Single Sign On.
 - Pagination on firm tabs, and the firm view page still groups fields where the real UI shows a plain list.
 - Firm service pages use a back link, where the real UI keeps the firm tabs.
 
@@ -158,6 +160,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Netting** is always on through `NETTING_ENABLED`, so event instruments always show Resolution. In the real app it is an environment setting.
 - **Export Data** writes the list's columns. In the real app the server builds the file.
 - **Product Question** is a plain text field, where the real UI suggests earlier questions.
+- **Register:** nothing is saved, and any username and password still logs in. A token registers if it is a JWT with a `sub`, and anything else shows "Unable to register user." **Use a sample token** is only in the prototype. The password check runs in the browser with made-up rules, where the real app calls `checkPassword`.
 - **Reset:** clear this site's browser data to restore the sample firms and instruments.
 
 ## Testing

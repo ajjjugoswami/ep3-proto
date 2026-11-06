@@ -14,6 +14,8 @@ const ACT = {
   'side-close'() { document.body.classList.remove('side-open'); },
   'nav-soon'(el) { toast(`${el.dataset.label} isn’t part of this prototype.`, { info: true }); },
   license() { showLicense(); },
+  'password-show'(el) { togglePassword(el); },
+  'register-sample'() { useSampleToken(); },
   'theme-set'(el) {
     storage.set(THEME_KEY, el.dataset.pref);
     applyTheme();
@@ -236,19 +238,16 @@ document.addEventListener('focusout', e => {
 
 document.addEventListener('submit', async e => {
   if (e.target.id === 'firmForm') { e.preventDefault(); submitFirm(); return; }
+  if (e.target.id === 'registerForm') { e.preventDefault(); submitRegister(e.target); return; }
   if (e.target.id === 'loginForm') {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const err = $('#loginErr');
     if (!String(fd.get('username')).trim() || !fd.get('password')) {
-      err.hidden = false;
-      err.innerHTML = `${icon('warn')}<span>Enter your username and password.</span>`;
+      showRowErr($('#loginErr'), 'Enter your username and password.');
       $(`[name=${String(fd.get('username')).trim() ? 'password' : 'username'}]`, e.target).focus();
       return;
     }
-    const btn = $('button[type=submit]', e.target);
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Logging In…';
+    setLoginBusy(e.target, 'Logging In…');
     await wait(500);
     storage.set(SESSION_KEY, '1');
     go('firms.html');

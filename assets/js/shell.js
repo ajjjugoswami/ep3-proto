@@ -75,6 +75,41 @@ function showLicense() {
   d.showModal();
 }
 
+const loginField = (label, control) => `<label class="login-field"><span>${esc(label)}</span>${control}</label>`;
+
+const passwordInput = (name, autocomplete) => `
+  <span class="login-input">
+    <input class="field" name="${name}" type="password" autocomplete="${autocomplete}">
+    <button class="login-show" type="button" data-act="password-show" aria-pressed="false" aria-label="Show password" title="Show password">${icon('eye')}</button>
+  </span>`;
+
+function togglePassword(btn) {
+  const input = $('input', btn.parentElement);
+  const showing = input.type === 'password';
+  input.type = showing ? 'text' : 'password';
+  const label = showing ? 'Hide password' : 'Show password';
+  btn.innerHTML = icon(showing ? 'eye-off' : 'eye');
+  btn.setAttribute('aria-pressed', String(showing));
+  btn.setAttribute('aria-label', label);
+  btn.title = label;
+}
+
+function showRowErr(el, message) {
+  el.hidden = !message;
+  el.innerHTML = message ? `${icon('warn')}<span>${esc(message)}</span>` : '';
+}
+
+function setLoginBusy(formEl, label) {
+  const btn = $('button[type=submit]', formEl);
+  const idle = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" aria-hidden="true"></span>${esc(label)}`;
+  return () => {
+    btn.disabled = false;
+    btn.innerHTML = idle;
+  };
+}
+
 function renderLogin() {
   document.title = 'Log In · EP3 Admin';
   document.body.classList.add('auth');
@@ -85,28 +120,13 @@ function renderLogin() {
           ${logo('login-logo')}
           <h1 tabindex="-1">Welcome back</h1>
           <p>Log in to the EP3 admin console.</p>
-          <label class="login-field"><span>Username</span><input class="field" name="username" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
-          <label class="login-field"><span>Password</span>
-            <span class="login-input">
-              <input class="field" name="password" type="password" autocomplete="current-password">
-              <button class="login-show" type="button" id="loginShow" aria-pressed="false" aria-label="Show password" title="Show password">${icon('eye')}</button>
-            </span>
-          </label>
+          ${loginField('Username', '<input class="field" name="username" autocomplete="username" autocapitalize="off" spellcheck="false">')}
+          ${loginField('Password', passwordInput('password', 'current-password'))}
           <div class="row-err" id="loginErr" role="alert" hidden></div>
           <button class="btn btn-primary" type="submit">Log In${icon('forward')}</button>
-          <p class="login-foot">Need to register? <button type="button" data-act="nav-soon" data-label="Registration">Register</button></p>
+          <p class="login-foot">Need to register? <a href="index.html?register=true">Register</a></p>
         </form>
       </div>
     </div>`;
-  $('#loginShow').addEventListener('click', e => {
-    const input = $('#loginForm [name=password]');
-    const showing = input.type === 'password';
-    input.type = showing ? 'text' : 'password';
-    const label = showing ? 'Hide password' : 'Show password';
-    e.currentTarget.innerHTML = icon(showing ? 'eye-off' : 'eye');
-    e.currentTarget.setAttribute('aria-pressed', String(showing));
-    e.currentTarget.setAttribute('aria-label', label);
-    e.currentTarget.title = label;
-  });
   $('#loginForm [name=username]').focus();
 }
