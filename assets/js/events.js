@@ -14,6 +14,7 @@ const ACT = {
   'side-close'() { document.body.classList.remove('side-open'); },
   'nav-soon'(el) { toast(`${el.dataset.label} isn’t part of this prototype.`, { info: true }); },
   license() { showLicense(); },
+  tip(el) { showTip(el); },
   'password-show'(el) { togglePassword(el); },
   'register-sample'() { useSampleToken(); },
   'theme-set'(el) {
@@ -271,6 +272,7 @@ window.addEventListener('beforeunload', e => {
 });
 
 window.addEventListener('scroll', e => {
+  hideTip();
   if (e.target.closest && e.target.closest('.select-pop')) return;
   closeMenu(false);
   closeSelect(false);

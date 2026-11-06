@@ -63,6 +63,7 @@ function renderPage() {
 function route() {
   const signedIn = storage.get(SESSION_KEY) === '1';
   if (spy) { spy.disconnect(); spy = null; }
+  hideTip();
   closeMenu(false);
   closeSelect(false);
   closeDatePicker(false);
