@@ -42,7 +42,7 @@ let spyLock = 0;
 let assocState = null;
 let firstList = session.get('listShown') !== '1';
 const list = { q: '', type: '', state: '', deleted: false, sort: 'seed', dir: 1, page: 0, size: 10, ...readListState('firmsList') };
-let listCtl = { state: list, refresh: () => refreshList() };
+let listCtl = { state: list, refresh: () => refreshList(), removeFilter: key => removeFirmFilter(key) };
 
 const persist = () => storage.set(STORE_KEY, JSON.stringify(firms));
 const clone = o => JSON.parse(JSON.stringify(o));

@@ -107,9 +107,9 @@ function renderList() {
             ${Object.entries(STATES).map(([v, l]) => `<option value="${v}" ${list.state === v ? 'selected' : ''}>${l}</option>`).join('')}
           </select>
         </label>
-        <button class="btn btn-gray" type="button" id="clearFilters" data-act="clear-filters">Reset</button>
         <label class="check push"><span class="switch"><input type="checkbox" role="switch" id="showDeleted" ${list.deleted ? 'checked' : ''}><span></span></span>Show Deleted</label>
       </div>
+      <div class="filter-chips" id="firmChips" role="group" aria-label="Active filters" hidden></div>
       <section class="card" id="results" aria-label="Firms"></section>
     </div>`;
   if (firstList) {
@@ -146,7 +146,39 @@ function refreshChrome() {
   const total = firms.filter(f => !f.deleted).length;
   const filtered = list.q || list.type || list.state;
   $('#listCount').textContent = filtered ? `${rows.length} of ${list.deleted ? firms.length : total} firms` : `${rows.length} firm${rows.length === 1 ? '' : 's'}`;
-  $('#clearFilters').disabled = !filtered;
+  showFilterChips($('#firmChips'), firmFilterChips(), 'clear-filters');
+}
+
+function firmFilterChips() {
+  return [
+    list.q.trim() && { key: 'q', label: 'Firm Name', value: list.q.trim() },
+    list.type && { key: 'type', label: 'Firm Type', value: TYPES[list.type].label },
+    list.state && { key: 'state', label: 'Firm State', value: STATES[list.state] },
+  ].filter(Boolean);
+}
+
+function syncFirmFilters() {
+  $('#q').value = list.q;
+  $('#typeFilter').value = list.type;
+  $('#stateFilter').value = list.state;
+  syncSelect($('#typeFilter'));
+  syncSelect($('#stateFilter'));
+}
+
+function removeFirmFilter(key) {
+  list[key] = '';
+  list.page = 0;
+  syncFirmFilters();
+  refreshList();
+}
+
+function showFilterChips(box, chips, clearAct) {
+  box.hidden = !chips.length;
+  box.innerHTML = chips.length ? `${chips.map(c => `<span class="tag filter-chip">
+      <span class="filter-chip-text" title="${esc(c.label)}: ${esc(c.value)}"><span class="filter-chip-key">${esc(c.label)}:</span> ${esc(c.value)}</span>
+      <button type="button" data-act="filter-remove" data-key="${esc(c.key)}" aria-label="Remove ${esc(c.label)} filter" title="Remove filter">${icon('x')}</button>
+    </span>`).join('')}
+    <button class="link-btn" type="button" data-act="${clearAct}">Clear all</button>` : '';
 }
 
 function sortHeader(key, label, cls = '') {

@@ -31,11 +31,16 @@ const ACT = {
   },
   'clear-filters'() {
     list.q = ''; list.type = ''; list.state = ''; list.page = 0;
-    $('#q').value = ''; $('#typeFilter').value = ''; $('#stateFilter').value = '';
-    syncSelect($('#typeFilter'));
-    syncSelect($('#stateFilter'));
+    syncFirmFilters();
     refreshList();
     $('#q').focus();
+  },
+  'filter-remove'(el) {
+    const index = $$('[data-act="filter-remove"]').indexOf(el);
+    listCtl.removeFilter(el.dataset.key);
+    const left = $$('[data-act="filter-remove"]');
+    const next = left[Math.min(index, left.length - 1)] || $('#q') || $('[data-filter]');
+    next.focus();
   },
   sort(el) {
     const key = el.dataset.key;

@@ -573,6 +573,11 @@ textarea.field { display: block; min-height: 88px; resize: vertical; }
 .tag button { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--ink-3); }
 .tag button:hover { background: var(--surface-3); color: var(--ink); }
 .tag .i { width: 12px; height: 12px; }
+.filter-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -4px 0 12px; }
+.filter-chip { max-width: 100%; background: var(--surface); border: 1px solid var(--line); }
+.filter-chip-text { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-chip-key { color: var(--ink-3); }
+.filter-chips .link-btn { margin-left: 6px; font-size: 13px; }
 .list-block { grid-column: 1 / -1; min-width: 0; }
 .list-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; margin-bottom: 8px; }
 .list-subtitle { margin: 16px 0 6px; }

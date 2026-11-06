@@ -7,6 +7,7 @@ Object.assign(ACT, {
     Object.assign(instList, blankInstrumentFilters(), { page: 0, more: false });
     refreshInstrumentFilters();
     refreshInstruments();
+    $('[data-filter]').focus();
   },
   'inst-more-filters'() {
     instList.more = !instList.more;

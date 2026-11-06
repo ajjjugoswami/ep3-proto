@@ -69,10 +69,25 @@ function instrumentFiltersHTML() {
   return `<div class="filters">
       ${INSTRUMENT_FILTERS.filter(f => f.primary).map(filterFieldHTML).join('')}
       <button class="btn btn-gray" type="button" data-act="inst-more-filters" aria-expanded="${!!instList.more}">More Filters<span class="count-badge" id="instMoreCount" ${count ? '' : 'hidden'}>${count}</span></button>
-      <button class="btn btn-plain" type="button" data-act="inst-clear-filters" ${instrumentFilterActive() ? '' : 'hidden'}>Reset</button>
       <button class="btn btn-gray push" type="button" data-act="inst-ops-menu" aria-haspopup="menu">Actions${icon('chevrons')}</button>
     </div>
     ${instList.more ? `<div class="filters filters-more">${secondaryFilters().map(filterFieldHTML).join('')}</div>` : ''}`;
+}
+
+function instrumentFilterChips() {
+  return INSTRUMENT_FILTERS.filter(f => String(instList[f.k] || '').trim()).map(f => ({
+    key: f.k,
+    label: f.label,
+    value: f.date ? formatWhen(instList[f.k]) : String(instList[f.k]).trim(),
+  }));
+}
+
+function removeInstrumentFilter(key) {
+  instList[key] = '';
+  instList.page = 0;
+  if (key === 'type') INSTRUMENT_FILTERS.filter(f => f.irs).forEach(f => { instList[f.k] = ''; });
+  refreshInstrumentFilters();
+  refreshInstruments();
 }
 
 function instrumentOpsMenuItems() {
@@ -88,13 +103,14 @@ function instrumentOpsMenuItems() {
 
 function renderInstruments() {
   document.title = 'Instruments · EP3 Admin';
-  listCtl = { state: instList, refresh: refreshInstruments };
+  listCtl = { state: instList, refresh: refreshInstruments, removeFilter: removeInstrumentFilter };
   $('#view').innerHTML = `<div class="detail-page">
     ${moduleHeadHTML('instruments', `
       <button class="btn btn-gray" type="button" data-act="inst-refresh">${icon('refresh')}Refresh Market Data</button>
       <a class="btn btn-primary" href="instrument.html?mode=new">${icon('plus')}Add Instrument</a>`)}
     <div class="detail-scroll">
       <div id="instFilters">${instrumentFiltersHTML()}</div>
+      <div class="filter-chips" id="instChips" role="group" aria-label="Active filters" hidden></div>
       <input type="file" id="csvFile" accept=".csv" hidden>
       <p class="sr" id="instCount" aria-live="polite"></p>
       <div class="sel-bar" id="instSelection" hidden></div>
@@ -167,8 +183,7 @@ function refreshInstruments() {
   const start = instList.page * instList.size;
   const pageRows = rows.slice(start, start + instList.size);
   $('#instCount').textContent = `${rows.length} instrument${rows.length === 1 ? '' : 's'}`;
-  const reset = $('#instFilters [data-act="inst-clear-filters"]');
-  if (reset) reset.hidden = !instrumentFilterActive();
+  showFilterChips($('#instChips'), instrumentFilterChips(), 'inst-clear-filters');
   const moreCount = $('#instMoreCount');
   if (moreCount) {
     moreCount.hidden = !secondaryFilterCount();
