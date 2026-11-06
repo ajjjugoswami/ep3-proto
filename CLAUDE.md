@@ -8,7 +8,7 @@ The source of truth for behaviour, field order, labels and rules is the real app
 
 - **Local:** open `index.html` in a browser. Any username and password logs in.
 - **Vercel:** static site with no framework preset and no build command. `vercel.json` has `cleanUrls` off, because links use `.html` and a redirect would slow every click. A rewrite keeps URLs without `.html` working. Files in `assets/` are cached for 5 minutes, then served stale while they refresh, so a deploy can take a few minutes to reach returning visitors.
-- **Page changes:** every click is a full page load. `@view-transition` in `app.css` fades between pages and keeps the sidebar still. It only works over HTTP or HTTPS, not when opening the file directly.
+- **Page changes:** every click is a full page load. `@view-transition` in `app.css` fades between pages and keeps the sidebar still. It only works over HTTP or HTTPS, not when opening the file directly. Each page has a `rel="expect"` link in `<head>` and `#app-ready` as the last element in `<body>`, so the browser waits for the scripts to draw the page before showing it. Keep both on every page, or the sidebar goes missing during the fade.
 - `firms-redesign.html` is the old single-file version. It is in `.gitignore` and is not used.
 
 ## Structure

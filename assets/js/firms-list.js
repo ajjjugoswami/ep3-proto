@@ -212,10 +212,11 @@ function patchListTable(box, html) {
     box.pagerKey = pagerKey;
     return;
   }
-  const widths = $$('thead th', table).map(th => th.offsetWidth);
+  const scrolls = table.offsetWidth > table.parentElement.clientWidth;
+  const widths = scrolls ? $$('thead th', table).map(th => th.offsetWidth) : [];
   $('thead', table).replaceWith($('thead', nextTable));
   $('tbody', table).replaceWith($('tbody', nextTable));
-  $$('thead th', table).forEach((th, i) => { th.style.minWidth = `${widths[i]}px`; });
+  if (scrolls) $$('thead th', table).forEach((th, i) => { th.style.minWidth = `${widths[i]}px`; });
   if (box.pagerKey !== pagerKey) {
     $('.pager', box).replaceWith(nextPager);
     box.pagerKey = pagerKey;
@@ -255,7 +256,8 @@ function refreshList() {
     return;
   }
   patchListTable($('#results'), `
-    <table class="tbl">
+    <table class="tbl tbl-firms">
+      <colgroup><col><col class="firm-col-id hide-compact"><col class="firm-col-type hide-compact"><col class="firm-col-state"><col class="firm-col-acts"></colgroup>
       <thead><tr>${sortHeader('name', 'Name')}${sortHeader('id', 'Firm ID', 'hide-compact')}<th class="hide-compact">Type</th><th>State</th><th class="acts"><span class="sr">Actions</span></th></tr></thead>
       <tbody>${pageRows.map(rowHTML).join('')}</tbody>
     </table>

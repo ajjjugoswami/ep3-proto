@@ -364,7 +364,12 @@ h1[tabindex="-1"]:focus-visible { outline: none; }
 .skel-acts { display: inline-flex; gap: 14px; padding: 5px 5px 5px 0; }
 .skel-icon { width: 24px; height: 24px; border-radius: 7px; }
 .skel-pager { width: 150px; height: 34px; border-radius: var(--r-s); }
-.skel-table { table-layout: fixed; }
+.skel-table, .tbl-firms { table-layout: fixed; }
+.tbl-firms td { overflow-wrap: anywhere; }
+.firm-col-id { width: 30%; }
+.firm-col-type { width: 160px; }
+.firm-col-state { width: 130px; }
+.firm-col-acts { width: 150px; }
 .skel-col-name { width: 32%; }
 .skel-col-id { width: 28%; }
 .skel-col-type { width: 17%; }
@@ -690,6 +695,8 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
 }
 .sidebar { view-transition-name: sidebar; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .12s; }
+::view-transition-group(sidebar), ::view-transition-new(sidebar) { animation: none; }
+::view-transition-old(sidebar) { display: none; }
 .auth .sidebar, .auth .topbar, .auth .scrim { display: none; }
 .auth .main { inset: 0; border: 0; border-radius: 0; box-shadow: none; background: var(--shell); }
 .login { position: relative; display: flex; min-height: 100%; }
@@ -763,6 +770,8 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
   .meta-row .row:first-child { grid-column: 1 / -1; }
   .hours-row { flex-wrap: wrap; }
   .hide-compact { display: none; }
+  .firm-col-state { width: 122px; }
+  .firm-col-acts { width: 104px; }
   .show-compact { display: inline; }
   .detail-page { display: block; height: auto; }
   .detail-head { padding: 18px 16px 0; }
