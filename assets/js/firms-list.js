@@ -83,7 +83,7 @@ function renderList() {
   $('#view').innerHTML = `
     <div class="page">
       <header class="page-head">
-        <div><h1 class="large-title" tabindex="-1">Firms</h1><p class="page-sub" id="listCount" aria-live="polite"></p></div>
+        <div><h1 class="large-title" tabindex="-1">Firms</h1><p class="sr" id="listCount" aria-live="polite"></p></div>
         <a class="btn btn-primary" href="firm-new.html">${icon('plus')}New Firm</a>
       </header>
       <div class="filters">

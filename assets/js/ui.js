@@ -26,8 +26,17 @@ function ask({ title, text, confirm, danger, glyph }) {
       <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" type="button" data-r="1">${esc(confirm)}</button>
     </div>`;
   return new Promise(resolve => {
-    $$('button', d).forEach(b => b.addEventListener('click', () => { d.close(); resolve(b.dataset.r === '1'); }));
-    d.addEventListener('close', () => resolve(false), { once: true });
+    const onClose = () => {
+      if (d.open) return;
+      d.removeEventListener('close', onClose);
+      resolve(false);
+    };
+    $$('button', d).forEach(b => b.addEventListener('click', () => {
+      d.removeEventListener('close', onClose);
+      d.close();
+      resolve(b.dataset.r === '1');
+    }));
+    d.addEventListener('close', onClose);
     d.showModal();
   });
 }
