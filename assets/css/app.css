@@ -786,7 +786,9 @@ dialog::backdrop { background: var(--scrim); -webkit-backdrop-filter: blur(3px);
   .side-open .sidebar { transform: none; }
   .side-open .scrim { opacity: 1; pointer-events: auto; }
   .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 20; display: flex; align-items: center; gap: 6px; height: 52px; padding: 0 10px; background: var(--shell); }
-  .topbar .logo { height: 30px; width: 52px; }
+  .topbar { justify-content: space-between; padding: 0 10px 0 14px; }
+  .topbar .icon-btn { order: 2; }
+  .topbar .logo { height: 40px; width: 68px; }
   .page { padding: 18px 16px 72px; }
   .form-page { padding-bottom: 0; }
   .dock { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
