@@ -15,6 +15,18 @@ const ACT = {
   'nav-soon'(el) { toast(`${el.dataset.label} isn’t part of this prototype.`, { info: true }); },
   license() { showLicense(); },
   tip(el) { showTip(el); },
+  'filters-toggle'(el) {
+    const state = listCtl.state;
+    state.showFilters = state.showFilters === false;
+    $('#listFilters').hidden = !state.showFilters;
+    el.setAttribute('aria-expanded', String(state.showFilters));
+    listCtl.refresh();
+  },
+  'page-to'(el) {
+    listCtl.state.page = Number(el.dataset.p);
+    listCtl.refresh();
+    scrollListToTop();
+  },
   'password-show'(el) { togglePassword(el); },
   'register-sample'() { useSampleToken(); },
   'theme-set'(el) {

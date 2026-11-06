@@ -83,10 +83,11 @@ function renderList() {
   $('#view').innerHTML = `
     <div class="page list-view">
       <header class="page-head">
-        <div><h1 class="large-title" tabindex="-1">Firms</h1><p class="sr" id="listCount" aria-live="polite"></p></div>
+        <div><h1 class="large-title" tabindex="-1">Firms</h1><p class="page-sub">Manage firms, their users, accounts and associations.</p><p class="sr" id="listCount" aria-live="polite"></p></div>
         <a class="btn btn-primary" href="firm-new.html">${icon('plus')}New Firm</a>
       </header>
-      <div class="filters">
+      ${controlBarHTML('building', 'Firm Controls', 'Filter firms and show deleted records', `<label class="check"><span class="switch"><input type="checkbox" role="switch" id="showDeleted" ${list.deleted ? 'checked' : ''}><span></span></span>Show Deleted</label>${filtersButtonHTML()}`)}
+      <div class="filters filters-grid" id="listFilters" ${list.showFilters === false ? 'hidden' : ''}>
         <label class="filter-field filter-search">
           <span>Firm Name</span>
           <div class="search">
@@ -107,7 +108,6 @@ function renderList() {
             ${Object.entries(STATES).map(([v, l]) => `<option value="${v}" ${list.state === v ? 'selected' : ''}>${l}</option>`).join('')}
           </select>
         </label>
-        <label class="check push"><span class="switch"><input type="checkbox" role="switch" id="showDeleted" ${list.deleted ? 'checked' : ''}><span></span></span>Show Deleted</label>
       </div>
       <div class="filter-chips" id="firmChips" role="group" aria-label="Active filters" hidden></div>
       <section class="card card-clip list-card" id="results" aria-label="Firms"></section>
@@ -149,6 +149,15 @@ function refreshChrome() {
   showFilterChips($('#firmChips'), firmFilterChips(), 'clear-filters');
 }
 
+function controlBarHTML(ic, title, sub, actions) {
+  return `<section class="control-bar" aria-label="${esc(title)}">
+    <div class="control-info"><span class="control-icon">${icon(ic)}</span><div><h2>${esc(title)}</h2><p>${esc(sub)}</p></div></div>
+    <div class="head-acts">${actions}</div>
+  </section>`;
+}
+
+const filtersButtonHTML = () => `<button class="btn btn-line" type="button" data-act="filters-toggle" aria-expanded="${listCtl.state.showFilters !== false}">${icon('filter')}Filters</button>`;
+
 function firmFilterChips() {
   return [
     list.q.trim() && { key: 'q', label: 'Firm Name', value: list.q.trim() },
@@ -174,11 +183,14 @@ function removeFirmFilter(key) {
 
 function showFilterChips(box, chips, clearAct) {
   box.hidden = !chips.length;
-  box.innerHTML = chips.length ? `${chips.map(c => `<span class="tag filter-chip">
-      <span class="filter-chip-text" title="${esc(c.label)}: ${esc(c.value)}"><span class="filter-chip-key">${esc(c.label)}:</span> ${esc(c.value)}</span>
-      <button type="button" data-act="filter-remove" data-key="${esc(c.key)}" aria-label="Remove ${esc(c.label)} filter" title="Remove filter">${icon('x')}</button>
+  box.innerHTML = chips.length ? `${chips.map(c => `<span class="filter-chip-group">
+      <span class="filter-chip-key">${esc(c.label)}:</span>
+      <span class="tag filter-chip">
+        <span class="filter-chip-text" title="${esc(c.value)}">${esc(c.value)}</span>
+        <button type="button" data-act="filter-remove" data-key="${esc(c.key)}" aria-label="Remove ${esc(c.label)} filter" title="Remove filter">${icon('x')}</button>
+      </span>
     </span>`).join('')}
-    <button class="link-btn" type="button" data-act="${clearAct}">Clear all</button>` : '';
+    <button class="filter-clear" type="button" data-act="${clearAct}">Clear all${icon('trash')}</button>` : '';
 }
 
 function sortHeader(key, label, cls = '') {
@@ -227,19 +239,27 @@ function patchListTable(box, html) {
   }
 }
 
+function pageNumbers(page, pages) {
+  const wanted = [...new Set([0, page - 1, page, page + 1, pages - 1])].filter(p => p >= 0 && p < pages).sort((a, b) => a - b);
+  return wanted.flatMap((p, i) => (i && p - wanted[i - 1] > 1 ? [null, p] : [p]));
+}
+
 function pagerHTML(total) {
   const { page, size } = listCtl.state;
   const pages = Math.max(1, Math.ceil(total / size));
   const start = page * size;
+  const noun = listCtl.noun ? ` ${listCtl.noun}` : '';
   return `<div class="pager">
-    <span>${start + 1}–${Math.min(start + size, total)} of ${total}</span>
+    <span>Showing ${start + 1}–${Math.min(start + size, total)} of ${total}${noun}</span>
     <div class="pager-actions">
-      <label><span class="sr">Rows per page</span>
-        <select class="field" id="pageSize">${[10, 25, 50].map(n => `<option value="${n}" ${size === n ? 'selected' : ''}>${n} rows</option>`).join('')}</select>
+      <label class="pager-size"><span>Rows per page:</span>
+        <select class="field" id="pageSize">${[10, 25, 50].map(n => `<option value="${n}" ${size === n ? 'selected' : ''}>${n}</option>`).join('')}</select>
       </label>
-      <button class="icon-btn" type="button" data-act="page" data-d="-1" aria-label="Previous Page" ${page === 0 ? 'disabled' : ''}>${icon('back')}</button>
-      <span>${page + 1} of ${pages}</span>
-      <button class="icon-btn flip" type="button" data-act="page" data-d="1" aria-label="Next Page" ${page >= pages - 1 ? 'disabled' : ''}><svg class="i" aria-hidden="true" transform="rotate(180)"><use href="#i-back"/></svg></button>
+      <button class="icon-btn pager-nav" type="button" data-act="page" data-d="-1" aria-label="Previous Page" ${page === 0 ? 'disabled' : ''}>${icon('back')}</button>
+      ${pageNumbers(page, pages).map(p => (p === null
+        ? '<span class="page-gap">…</span>'
+        : `<button class="page-num" type="button" data-act="page-to" data-p="${p}" ${p === page ? 'aria-current="page"' : ''} aria-label="Page ${p + 1}">${p + 1}</button>`)).join('')}
+      <button class="icon-btn pager-nav" type="button" data-act="page" data-d="1" aria-label="Next Page" ${page >= pages - 1 ? 'disabled' : ''}>${icon('forward')}</button>
     </div>
   </div>`;
 }
@@ -262,7 +282,7 @@ function refreshList() {
   patchListTable($('#results'), `
     <div class="table-scroll"><table class="tbl tbl-firms">
       <colgroup><col><col class="firm-col-id hide-compact"><col class="firm-col-type hide-compact"><col class="firm-col-state"><col class="firm-col-acts"></colgroup>
-      <thead><tr>${sortHeader('name', 'Name')}${sortHeader('id', 'Firm ID', 'hide-compact')}<th class="hide-compact">Type</th><th>State</th><th class="acts"><span class="sr">Actions</span></th></tr></thead>
+      <thead><tr>${sortHeader('name', 'Name')}${sortHeader('id', 'Firm ID', 'hide-compact')}<th class="hide-compact">Type</th><th>State</th><th class="acts">Actions</th></tr></thead>
       <tbody>${pageRows.map(rowHTML).join('')}</tbody>
     </table></div>
     ${pagerHTML(rows.length)}`);

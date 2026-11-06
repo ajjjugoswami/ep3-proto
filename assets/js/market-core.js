@@ -77,10 +77,16 @@ function hashText(text) {
 
 const MODULE_TABS = [['products', 'Products', 'products.html'], ['instruments', 'Instruments', 'instruments.html'], ['calendars', 'Calendars', 'calendars.html']];
 
+const MODULE_SUBS = {
+  instruments: 'Manage financial instruments, trading status and settlement prices.',
+  products: 'Manage the products that instruments are created from.',
+  calendars: 'Manage holiday calendars and events.',
+};
+
 function moduleHeadHTML(active, actions = '', title = 'Instruments') {
   return `<div class="detail-head">
     <header class="firm-head">
-      <h1 class="large-title" tabindex="-1">${esc(title)}</h1>
+      <div><h1 class="large-title" tabindex="-1">${esc(title)}</h1><p class="page-sub">${esc(MODULE_SUBS[active] || '')}</p></div>
       <div class="head-acts">${actions}</div>
     </header>
     <nav class="tabs" aria-label="Instrument sections">${MODULE_TABS.map(([key, label, href]) => `<a href="${href}" ${key === active ? 'aria-current="page"' : ''}>${label}</a>`).join('')}</nav>

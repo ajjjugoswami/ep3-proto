@@ -4,18 +4,12 @@ Object.assign(ACT, {
   'inst-row-menu'(el) { openMenu(el, instrumentMenuItems(instrumentById(el.dataset.id), false)); },
   'inst-detail-menu'(el) { openMenu(el, instrumentMenuItems(instrumentById(el.dataset.id), true)); },
   'inst-clear-filters'() {
-    Object.assign(instList, blankInstrumentFilters(), { page: 0, more: false });
+    Object.assign(instList, blankInstrumentFilters(), { page: 0 });
     refreshInstrumentFilters();
     refreshInstruments();
     $('[data-filter]').focus();
   },
-  'inst-more-filters'() {
-    instList.more = !instList.more;
-    saveListState('instList', instList);
-    refreshInstrumentFilters();
-    enhanceSelects();
-    $('[data-act="inst-more-filters"]').focus();
-  },
+  'inst-halt-all'() { haltAllInstruments(); },
   'inst-ops-menu'(el) { openMenu(el, instrumentOpsMenuItems()); },
   'inst-refresh'() { refreshMarketData(); },
   'inst-state'(el) { openStateSheet([el.dataset.id]); },
@@ -113,8 +107,7 @@ document.addEventListener('change', e => {
     instList[t.dataset.filter] = t.value;
     instList.page = 0;
     if (t.dataset.filter === 'type') {
-      if (t.value === IT.IRS) instList.more = true;
-      else INSTRUMENT_FILTERS.filter(f => f.irs).forEach(f => { instList[f.k] = ''; });
+      if (t.value !== IT.IRS) INSTRUMENT_FILTERS.filter(f => f.irs).forEach(f => { instList[f.k] = ''; });
       refreshInstrumentFilters();
       enhanceSelects();
       $('[data-filter="type"]').focus();

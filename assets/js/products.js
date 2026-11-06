@@ -4,7 +4,7 @@ const productList = { sort: 'id', dir: 1, page: 0, size: 10, ...readListState('p
 
 function renderProducts() {
   document.title = 'Products · EP3 Admin';
-  listCtl = { state: productList, refresh: refreshProducts };
+  listCtl = { state: productList, refresh: refreshProducts, noun: 'products' };
   $('#view').innerHTML = `<div class="detail-page">
     ${moduleHeadHTML('products', `<a class="btn btn-primary" href="product.html?mode=new">${icon('plus')}Add New Product</a>`)}
     <div class="detail-scroll list-view"><section class="card card-clip list-card" id="productResults" aria-label="Products"></section></div>

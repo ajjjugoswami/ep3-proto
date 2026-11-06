@@ -1,7 +1,7 @@
 'use strict';
 
 const blankInstrumentFilters = () => Object.fromEntries(INSTRUMENT_FILTERS.map(f => [f.k, '']));
-const instList = { page: 0, size: 10, more: false, sort: '', dir: 1, ...blankInstrumentFilters(), ...readListState('instList') };
+const instList = { page: 0, size: 10, showFilters: true, sort: '', dir: 1, ...blankInstrumentFilters(), ...readListState('instList') };
 const instSelected = new Set();
 
 const instStat = (valueKey, setTime) => i => {
@@ -25,8 +25,7 @@ const INSTRUMENT_SORTS = {
 const sortedInstruments = rows => (INSTRUMENT_SORTS[instList.sort] ? sortRows(rows, INSTRUMENT_SORTS[instList.sort], instList.dir) : rows);
 
 const instrumentFilterActive = () => INSTRUMENT_FILTERS.some(f => instList[f.k]);
-const secondaryFilters = () => INSTRUMENT_FILTERS.filter(f => !f.primary && (!f.irs || instList.type === IT.IRS));
-const secondaryFilterCount = () => secondaryFilters().filter(f => instList[f.k]).length;
+const shownFilters = () => INSTRUMENT_FILTERS.filter(f => !f.irs || instList.type === IT.IRS);
 
 function matchesInstrumentFilters(i) {
   const f = instList;
@@ -65,13 +64,7 @@ function filterFieldHTML(f) {
 }
 
 function instrumentFiltersHTML() {
-  const count = secondaryFilterCount();
-  return `<div class="filters">
-      ${INSTRUMENT_FILTERS.filter(f => f.primary).map(filterFieldHTML).join('')}
-      <button class="btn btn-gray" type="button" data-act="inst-more-filters" aria-expanded="${!!instList.more}">More Filters<span class="count-badge" id="instMoreCount" ${count ? '' : 'hidden'}>${count}</span></button>
-      <button class="btn btn-gray push" type="button" data-act="inst-ops-menu" aria-haspopup="menu">Actions${icon('chevrons')}</button>
-    </div>
-    ${instList.more ? `<div class="filters filters-more">${secondaryFilters().map(filterFieldHTML).join('')}</div>` : ''}`;
+  return `<div class="filters filters-grid" id="listFilters" ${instList.showFilters === false ? 'hidden' : ''}>${shownFilters().map(filterFieldHTML).join('')}</div>`;
 }
 
 function instrumentFilterChips() {
@@ -97,18 +90,22 @@ function instrumentOpsMenuItems() {
     { label: 'Approve Settlement Prices', icon: 'check', run: openApproveSheet },
     '-',
     { label: 'Resume Halted to Schedule', icon: 'play', run: resumeHaltedInstruments },
-    { label: 'Halt All', icon: 'pause', danger: true, run: haltAllInstruments },
   ];
 }
 
 function renderInstruments() {
   document.title = 'Instruments · EP3 Admin';
-  listCtl = { state: instList, refresh: refreshInstruments, removeFilter: removeInstrumentFilter };
+  listCtl = { state: instList, refresh: refreshInstruments, removeFilter: removeInstrumentFilter, noun: 'instruments' };
   $('#view').innerHTML = `<div class="detail-page">
     ${moduleHeadHTML('instruments', `
-      <button class="btn btn-gray" type="button" data-act="inst-refresh">${icon('refresh')}Refresh Market Data</button>
+      <div class="refresh-info">${icon('clock')}<div><small>Last MKT Data Refresh</small><strong id="lastRefresh">${esc(lastRefreshLabel())}</strong></div></div>
+      <button class="btn btn-outline" type="button" data-act="inst-refresh">${icon('refresh')}Refresh MKT Data</button>
       <a class="btn btn-primary" href="instrument.html?mode=new">${icon('plus')}Add Instrument</a>`)}
     <div class="detail-scroll list-view">
+      ${controlBarHTML('chart', 'Trading Controls', 'Manage trading availability for instruments', `
+        <button class="btn btn-outline-bad" type="button" data-act="inst-halt-all">${icon('stop')}Halt All</button>
+        ${filtersButtonHTML()}
+        <button class="btn btn-line" type="button" data-act="inst-ops-menu" aria-haspopup="menu">${icon('more')}More</button>`)}
       <div id="instFilters">${instrumentFiltersHTML()}</div>
       <div class="filter-chips" id="instChips" role="group" aria-label="Active filters" hidden></div>
       <input type="file" id="csvFile" accept=".csv" hidden>
@@ -118,6 +115,11 @@ function renderInstruments() {
     </div>
   </div>`;
   refreshInstruments();
+}
+
+function lastRefreshLabel() {
+  const latest = market.lastRefresh || market.instruments.map(i => (i.stats || {}).lastTradeSetTime || '').sort().pop();
+  return latest ? formatWhen(latest) : 'Not refreshed yet';
 }
 
 function refreshInstrumentFilters() {
@@ -155,11 +157,11 @@ function instrumentRowHTML(i) {
   return `<tr data-href="${esc(instHref(i.id))}" data-inst="${esc(i.id)}">
     <td class="check-cell"><input class="inst-check" type="checkbox" value="${esc(i.id)}" ${instSelected.has(i.id) ? 'checked' : ''} aria-label="Select ${esc(i.id)}"></td>
     <td>${esc(i.productId)}</td>
-    <td><a class="firm-name mono" href="${esc(instHref(i.id))}">${esc(i.id)}</a></td>
+    <td><a class="firm-name" href="${esc(instHref(i.id))}">${esc(i.id)}</a></td>
     <td class="desc-cell" title="${esc(i.description)}">${esc(i.description)}</td>
-    <td>${i.nonTradable ? 'N' : 'Y'}</td>
+    <td><span class="pill ${i.nonTradable ? 'pill-closed' : 'pill-active'}">${i.nonTradable ? 'No' : 'Yes'}</span></td>
     <td class="house-cell" title="${esc(i.clearingHouse)}">${esc(i.clearingHouse)}</td>
-    <td>${i.isScheduled ? 'Scheduled' : '<span class="text-bad">Manual</span>'}</td>
+    <td><span class="pill ${i.isScheduled ? 'pill-preopen' : 'pill-halted'}">${i.isScheduled ? 'Scheduled' : 'Manual'}</span></td>
     <td>${statusPill(i.state)}</td>
     <td class="num">${stat(s.open, 'openSetTime')}</td>
     <td class="num">${stat(s.high, 'highSetTime')}</td>
@@ -184,11 +186,6 @@ function refreshInstruments() {
   const pageRows = rows.slice(start, start + instList.size);
   $('#instCount').textContent = `${rows.length} instrument${rows.length === 1 ? '' : 's'}`;
   showFilterChips($('#instChips'), instrumentFilterChips(), 'inst-clear-filters');
-  const moreCount = $('#instMoreCount');
-  if (moreCount) {
-    moreCount.hidden = !secondaryFilterCount();
-    moreCount.textContent = secondaryFilterCount();
-  }
   if (!rows.length) {
     $('#instResults').innerHTML = instrumentFilterActive()
       ? `<div class="empty"><h3>No matching instruments</h3><p>Try different filters, or clear them.</p><button class="btn btn-tint" type="button" data-act="inst-clear-filters">Clear Filters</button></div>`
@@ -199,9 +196,9 @@ function refreshInstruments() {
   patchListTable($('#instResults'), `<div class="table-scroll"><table class="tbl tbl-wide">
       <thead><tr>
         <th class="check-cell"><input type="checkbox" id="instCheckAll" aria-label="Select all on this page"></th>
-        ${sortHeader('productId', 'Product Name')}${sortHeader('id', 'ID (Symbol)')}${sortHeader('description', 'Description')}${sortHeader('tradable', 'Tradable')}${sortHeader('clearingHouse', 'Clearing House')}${sortHeader('scheduled', 'Scheduled')}<th>State</th>
-        ${sortHeader('open', 'Open', 'num')}${sortHeader('high', 'High', 'num')}${sortHeader('low', 'Low', 'num')}${sortHeader('close', 'Close', 'num')}${sortHeader('lastPrice', 'Last-Px', 'num')}${sortHeader('settlementPrice', 'Settl-Px', 'num')}
-        <th class="acts"><span class="sr">Actions</span></th>
+        ${sortHeader('productId', 'Product Name')}${sortHeader('id', 'ID (Symbol)')}${sortHeader('description', 'Description')}${sortHeader('tradable', 'Tradable')}${sortHeader('clearingHouse', 'Clearing House')}${sortHeader('scheduled', 'Schedule')}<th>State</th>
+        ${sortHeader('open', 'Open', 'num')}${sortHeader('high', 'High', 'num')}${sortHeader('low', 'Low', 'num')}${sortHeader('close', 'Close', 'num')}${sortHeader('lastPrice', 'Last PX', 'num')}${sortHeader('settlementPrice', 'Settl-PX', 'num')}
+        <th class="acts">Actions</th>
       </tr></thead>
       <tbody>${pageRows.map(instrumentRowHTML).join('')}</tbody>
     </table></div>
@@ -213,17 +210,28 @@ function instrumentMenuItems(i, onDetail) {
   const editable = instEditable(i);
   return [
     ...(onDetail ? [] : [
-      { label: 'Change State', icon: 'warn', disabled: !editable, reason: EDIT_BLOCKED, run: () => openStateSheet([i.id]) },
-      { label: 'Edit', icon: 'edit', disabled: !editable, reason: EDIT_BLOCKED, run: () => go(instHref(i.id, 'edit')) },
-      { label: 'Copy', icon: 'copy', run: () => go(instHref(i.id, 'copy')) },
-      '-',
+      { label: 'Duplicate', icon: 'copy', run: () => go(instHref(i.id, 'copy')) },
+      { label: 'Halt / Resume', icon: i.state === 'Halted' ? 'play' : 'pause', disabled: !canToggleHalt(i), reason: 'This instrument can’t be halted or resumed.', run: () => toggleInstrumentHalt(i) },
+      { label: 'View Records', icon: 'list', run: () => go(instHistoryHref(i.id)) },
+      { label: 'State', icon: 'edit', disabled: !editable, reason: EDIT_BLOCKED, run: () => openStateSheet([i.id]) },
     ]),
     { label: 'Book', icon: 'book', run: () => go(bookHref(i.id)) },
     { label: 'Review Market Stats', icon: 'chart', disabled: !instStatsEnabled(i), reason: STATS_BLOCKED, run: () => go(instStatsHref(i.id)) },
-    ...(onDetail ? [] : [{ label: 'Open in New Tab', icon: 'new-tab', run: () => window.open(instHref(i.id), '_blank') }]),
     '-',
     { label: 'Delete', icon: 'trash', danger: true, disabled: !instDeletable(i), reason: DELETE_BLOCKED, run: () => deleteInstruments([i.id]) },
   ];
+}
+
+const canToggleHalt = i => !i.nonTradable && (i.state === 'Halted' || !HALTABLE_EXCLUDED.includes(i.state));
+
+async function toggleInstrumentHalt(i) {
+  const halted = i.state === 'Halted';
+  const ok = await ask({ title: `${halted ? 'Resume' : 'Halt'} ${i.id}?`, text: halted ? 'This resumes the instrument to its original schedule.' : 'This halts trading for this instrument.', confirm: 'Confirm', danger: !halted, glyph: halted ? 'play' : 'pause' });
+  if (!ok) return;
+  if (halted) { i.isScheduled = true; i.state = stateFromSchedule(i); } else { i.state = 'Halted'; i.isScheduled = false; }
+  saveMarket();
+  refreshInstruments();
+  toast(`${halted ? 'Resumed' : 'Halted'} ${i.id}.`);
 }
 
 async function deleteInstruments(ids, fromSelection) {
@@ -272,7 +280,9 @@ function refreshMarketData() {
     s.low = String(Math.min(Number(s.low), Number(s.lastPrice)));
     s.lastTradeSetTime = isoDateTime(new Date());
   });
+  market.lastRefresh = isoDateTime(new Date());
   saveMarket();
   refreshInstruments();
+  $('#lastRefresh').textContent = lastRefreshLabel();
   toast('Market data refreshed.');
 }
