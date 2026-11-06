@@ -34,17 +34,13 @@ function renderSidebar() {
 }
 
 function themePref() {
-  const stored = storage.get(THEME_KEY);
-  return stored === 'light' || stored === 'dark' ? stored : 'system';
+  return storage.get(THEME_KEY) === 'dark' ? 'dark' : 'light';
 }
 
 function applyTheme() {
-  const pref = themePref();
   const root = document.documentElement;
   root.classList.add('theme-switching');
-  root.dataset.theme = pref === 'system'
-    ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : pref;
+  root.dataset.theme = themePref();
   requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('theme-switching')));
 }
 

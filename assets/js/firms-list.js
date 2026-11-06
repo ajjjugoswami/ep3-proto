@@ -74,7 +74,7 @@ function filteredFirms() {
 function sortedFirms(rows) {
   if (list.sort === 'seed') return rows;
   const val = f => list.sort === 'type' ? TYPES[f.type].label : list.sort === 'state' ? (f.deleted ? 'Deleted' : STATES[f.state]) : list.sort === 'id' ? f.id : f.name;
-  return [...rows].sort((a, b) => val(a).localeCompare(val(b), undefined, { sensitivity: 'base' }) * list.dir);
+  return sortRows(rows, val, list.dir);
 }
 
 function renderList() {
@@ -151,7 +151,20 @@ function refreshChrome() {
 function sortHeader(key, label, cls = '') {
   const { sort, dir } = listCtl.state;
   const on = sort === key;
-  return `<th class="${cls}" ${on ? `aria-sort="${dir > 0 ? 'ascending' : 'descending'}"` : ''}><button type="button" data-act="sort" data-key="${key}">${label}${icon('up')}</button></th>`;
+  return `<th class="${cls}" ${on ? `aria-sort="${dir > 0 ? 'ascending' : 'descending'}"` : ''}><button type="button" data-act="sort" data-key="${key}">${label}${icon(on ? 'up' : 'chevrons')}</button></th>`;
+}
+
+function sortRows(rows, value, dir) {
+  const blank = v => v === null || v === undefined || v === '';
+  return [...rows].sort((a, b) => {
+    const x = value(a);
+    const y = value(b);
+    if (blank(x) || blank(y)) return blank(x) - blank(y);
+    const order = typeof x === 'number' && typeof y === 'number'
+      ? x - y
+      : String(x).localeCompare(String(y), undefined, { sensitivity: 'base', numeric: true });
+    return order * dir;
+  });
 }
 
 function pagerHTML(total) {

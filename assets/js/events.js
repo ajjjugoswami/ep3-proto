@@ -41,6 +41,7 @@ const ACT = {
     const key = el.dataset.key;
     const state = listCtl.state;
     if (state.sort === key) state.dir *= -1; else { state.sort = key; state.dir = 1; }
+    state.page = 0;
     listCtl.refresh();
     $(`[data-act="sort"][data-key="${key}"]`).focus();
   },
@@ -277,8 +278,6 @@ window.addEventListener('scroll', e => {
   closeMenu(false);
   closeSelect(false);
 }, { passive: true, capture: true });
-
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
 document.addEventListener('click', async e => {
   const link = e.target.closest('a[href]');

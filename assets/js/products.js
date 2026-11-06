@@ -14,8 +14,7 @@ function renderProducts() {
 
 function refreshProducts() {
   saveListState('productList', productList);
-  const value = p => String(p[productList.sort] || '');
-  const rows = [...market.products].sort((a, b) => value(a).localeCompare(value(b), undefined, { sensitivity: 'base' }) * productList.dir);
+  const rows = sortRows(market.products, p => p[productList.sort], productList.dir);
   if (!rows.length) {
     $('#productResults').innerHTML = `<div class="empty"><h3>No products yet</h3><p>Add a product to start creating instruments.</p><a class="btn btn-primary" href="product.html?mode=new">${icon('plus')}Add New Product</a></div>`;
     return;

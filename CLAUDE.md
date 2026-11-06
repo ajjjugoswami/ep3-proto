@@ -40,6 +40,8 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `css/app.css` | All styles and the light and dark colour tokens |
 | `js/theme-init.js` | Applies the theme in `<head>` to avoid a flash |
 | `js/sprite.js` | Injects the logo and icon SVG sprite |
+| `js/tips.js` | `TIPS`, the tooltip wording from the real app. Loads before `config.js` |
+| `js/tooltip.js` | `tipHTML` and the tooltip bubble |
 | `js/config.js` | Storage keys, firm types, field schema, tabs, associations, roles, record definitions, nav, `APP_INFO` |
 | `js/seed.js` | Sample firms and the generator that fills their tabs |
 | `js/core.js` | Page and URL helpers, storage, state, `hrefFor`, `go`, flash toasts |
@@ -82,10 +84,11 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 - **Toasts across pages:** call `toast()` around `go()`. It is saved and shown on the next page.
 - **Unsaved changes:** forms use `form.draft` and `isDirty()`. Leaving a dirty form asks first.
 - **Data:** firms are stored in `localStorage` under `STORE_KEY`, and products, instruments and calendars under `MARKET_KEY`. Bump the version in `config.js` or `market-config.js` when the seed or data shape changes, because that discards saved data.
-- **Instrument and product forms are schema driven.** A section lists items in the real field order: `key`, `key*` (required), `=key` (read-only mirror), `key|Label`, `#Subheading`, `@block`. Field types come from `FIELD_RULES` and `FIELD_DEFS`. To change a type's form, edit `market-sections.js`, not the render code.
+- **Instrument and product forms are schema driven.** A section lists items in the real field order: `key`, `key*` (required), `=key` (read-only mirror), `key|Label`, `#Subheading` or `#Subheading|tipKey`, `@block`. Field types come from `FIELD_RULES` and `FIELD_DEFS`. To change a type's form, edit `market-sections.js`, not the render code.
 - **Module forms** use the same `form` object as firms, with a `form.module` holding `body`, `validate`, `submit` and `onChange`. Nested values use dotted field keys such as `legs.0.symbol`.
 - **Sheets:** use `openFormSheet` for a form in a dialog and `openWideSheet` for a table in a dialog.
-- **Lists:** set `listCtl` to the page's list state and refresh function, so `sortHeader`, `pagerHTML` and the shared sort and page actions work.
+- **Lists:** set `listCtl` to the page's list state and refresh function, so `sortHeader`, `pagerHTML` and the shared sort and page actions work. Sort rows with `sortRows`.
+- **Tooltips:** give a field a `tip`, either text or a function of the values, and `fieldRow` and `readRow` show it. Elsewhere use `tipHTML`.
 
 ## Rules copied from the real admin UI
 
@@ -122,12 +125,14 @@ Instruments module, from `pages/Instruments.js`, `InstrumentForm.js` and `Produc
 Keep these unless told otherwise. The user wants a simple admin tool, not a fancy one.
 
 - **Font:** Geist and Geist Mono, not Montserrat. Google Fonts is loaded from a CDN.
-- **Theme:** Light, Dark and System in the sidebar. Dark uses neutral near-black with white text. Light uses a neutral off-white sidebar, white panel and grey icons.
+- **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark uses neutral near-black with white text. Light uses a neutral off-white sidebar, white panel and grey icons.
 - **App shell:** flat sidebar, with the content in a large rounded panel and thin scrollbars inset from the corners.
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Login:** centred form with no card, logo above "Welcome back", eye icon on the password, no side panel or decorative shapes.
 - **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in the name cells. Row actions are View and Edit icons and a More menu, the same as the instrument list.
 - **Instrument list:** keep the area above the table to one row. Product, Symbol, State and Type filters apply live, the other filters sit behind More Filters, and Reset only shows when a filter is active. Export, settlement price actions, Resume and Halt All sit in one Actions menu, not a row of buttons. Row actions are View and Edit icons and a More menu rather than seven icons, and the actions column stays visible while the wide table scrolls.
+- **Sortable columns:** firm, instrument and product lists sort from the column header, with an arrow always visible. The first click sorts ascending, the next descending, and sorting returns to the first page. Blank values stay last. The real instrument grid has no sorting, so this is an addition there.
+- **Tooltips:** a question-circle icon opens a themed bubble on hover or click, with the real app's full wording. Where the real app uses a tooltip, it replaces inline help text. The icons aren't in the tab order, so long forms stay quick to tab through.
 - **Firm pages:** fixed header with underlined tabs. Only the content scrolls.
 - **Forms:** real field order flowing into responsive columns, 44px inputs, Save then Cancel in a footer pinned to the bottom left.
 - **Toasts:** top centre, one at a time, no Undo.

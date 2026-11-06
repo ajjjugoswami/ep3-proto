@@ -213,4 +213,4 @@ const APP_INFO = {
   licenseVersion: '>0.7.0',
   expires: '20300211-05:30:00.000',
 };
-const THEMES = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon'], ['system', 'System', 'monitor']];
+const THEMES = [['light', 'Light', 'sun'], ['dark', 'Dark', 'moon']];

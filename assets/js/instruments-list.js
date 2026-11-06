@@ -1,8 +1,29 @@
 'use strict';
 
 const blankInstrumentFilters = () => Object.fromEntries(INSTRUMENT_FILTERS.map(f => [f.k, '']));
-const instList = { page: 0, size: 10, more: false, ...blankInstrumentFilters(), ...readListState('instList') };
+const instList = { page: 0, size: 10, more: false, sort: '', dir: 1, ...blankInstrumentFilters(), ...readListState('instList') };
 const instSelected = new Set();
+
+const instStat = (valueKey, setTime) => i => {
+  const s = i.stats || {};
+  return s[setTime] && s[valueKey] !== '' && s[valueKey] !== undefined ? Number(s[valueKey]) : null;
+};
+const INSTRUMENT_SORTS = {
+  productId: i => i.productId,
+  id: i => i.id,
+  description: i => i.description,
+  tradable: i => (i.nonTradable ? 'N' : 'Y'),
+  clearingHouse: i => i.clearingHouse,
+  scheduled: i => (i.isScheduled ? 'Scheduled' : 'Manual'),
+  state: i => i.state,
+  open: instStat('open', 'openSetTime'),
+  high: instStat('high', 'highSetTime'),
+  low: instStat('low', 'lowSetTime'),
+  close: instStat('close', 'closeSetTime'),
+  lastPrice: instStat('lastPrice', 'lastTradeSetTime'),
+  settlementPrice: instStat('settlementPrice', 'settlementSetTime'),
+};
+const sortedInstruments = rows => (INSTRUMENT_SORTS[instList.sort] ? sortRows(rows, INSTRUMENT_SORTS[instList.sort], instList.dir) : rows);
 
 const instrumentFilterActive = () => INSTRUMENT_FILTERS.some(f => instList[f.k]);
 const secondaryFilters = () => INSTRUMENT_FILTERS.filter(f => !f.primary && (!f.irs || instList.type === IT.IRS));
@@ -141,8 +162,8 @@ function instrumentRowHTML(i) {
 
 function refreshInstruments() {
   saveListState('instList', instList);
-  const rows = filteredInstruments();
-  const pages = Math.max(1, Math.ceil(rows.length / instList.size));
+  const rows = sortedInstruments(filteredInstruments());
+  const pages =Math.max(1, Math.ceil(rows.length / instList.size));
   instList.page = Math.min(instList.page, pages - 1);
   const start = instList.page * instList.size;
   const pageRows = rows.slice(start, start + instList.size);
@@ -164,8 +185,8 @@ function refreshInstruments() {
   $('#instResults').innerHTML = `<div class="table-scroll"><table class="tbl tbl-wide">
       <thead><tr>
         <th class="check-cell"><input type="checkbox" id="instCheckAll" aria-label="Select all on this page"></th>
-        <th>Product Name</th><th>ID (Symbol)</th><th>Description</th><th>Tradable</th><th>Clearing House</th><th>Scheduled</th><th>State</th>
-        <th class="num">Open</th><th class="num">High</th><th class="num">Low</th><th class="num">Close</th><th class="num">Last-Px</th><th class="num">Settl-Px</th>
+        ${sortHeader('productId', 'Product Name')}${sortHeader('id', 'ID (Symbol)')}${sortHeader('description', 'Description')}${sortHeader('tradable', 'Tradable')}${sortHeader('clearingHouse', 'Clearing House')}${sortHeader('scheduled', 'Scheduled')}${sortHeader('state', 'State')}
+        ${sortHeader('open', 'Open', 'num')}${sortHeader('high', 'High', 'num')}${sortHeader('low', 'Low', 'num')}${sortHeader('close', 'Close', 'num')}${sortHeader('lastPrice', 'Last-Px', 'num')}${sortHeader('settlementPrice', 'Settl-Px', 'num')}
         <th class="acts"><span class="sr">Actions</span></th>
       </tr></thead>
       <tbody>${pageRows.map(instrumentRowHTML).join('')}</tbody>
