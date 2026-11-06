@@ -43,7 +43,7 @@ const ACT = {
     if (state.sort === key) state.dir *= -1; else { state.sort = key; state.dir = 1; }
     state.page = 0;
     listCtl.refresh();
-    $(`[data-act="sort"][data-key="${key}"]`).focus();
+    $(`[data-act="sort"][data-key="${key}"]`).focus({ preventScroll: true });
   },
   page(el) {
     listCtl.state.page += Number(el.dataset.d);
@@ -270,6 +270,10 @@ document.addEventListener('keydown', e => {
 
 window.addEventListener('beforeunload', e => {
   if (isDirty()) { e.preventDefault(); e.returnValue = ''; }
+});
+
+window.addEventListener('resize', () => {
+  $$('.tbl th').forEach(th => { th.style.minWidth = ''; });
 });
 
 window.addEventListener('scroll', e => {

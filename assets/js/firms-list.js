@@ -71,10 +71,11 @@ function filteredFirms() {
   });
 }
 
+const FIRM_SORTS = { name: f => f.name, id: f => f.id };
+
 function sortedFirms(rows) {
-  if (list.sort === 'seed') return rows;
-  const val = f => list.sort === 'type' ? TYPES[f.type].label : list.sort === 'state' ? (f.deleted ? 'Deleted' : STATES[f.state]) : list.sort === 'id' ? f.id : f.name;
-  return sortRows(rows, val, list.dir);
+  const value = FIRM_SORTS[list.sort];
+  return value ? sortRows(rows, value, list.dir) : rows;
 }
 
 function renderList() {
@@ -167,6 +168,28 @@ function sortRows(rows, value, dir) {
   });
 }
 
+function patchListTable(box, html) {
+  const next = document.createElement('template');
+  next.innerHTML = html;
+  const table = $('table', box);
+  const nextTable = $('table', next.content);
+  const nextPager = $('.pager', next.content);
+  const pagerKey = nextPager ? nextPager.outerHTML : '';
+  if (!table || !nextTable || table.className !== nextTable.className) {
+    box.innerHTML = html;
+    box.pagerKey = pagerKey;
+    return;
+  }
+  const widths = $$('thead th', table).map(th => th.offsetWidth);
+  $('thead', table).replaceWith($('thead', nextTable));
+  $('tbody', table).replaceWith($('tbody', nextTable));
+  $$('thead th', table).forEach((th, i) => { th.style.minWidth = `${widths[i]}px`; });
+  if (box.pagerKey !== pagerKey) {
+    $('.pager', box).replaceWith(nextPager);
+    box.pagerKey = pagerKey;
+  }
+}
+
 function pagerHTML(total) {
   const { page, size } = listCtl.state;
   const pages = Math.max(1, Math.ceil(total / size));
@@ -199,12 +222,12 @@ function refreshList() {
       : `<div class="empty"><h3>No firms yet</h3><p>Create a firm to start onboarding it to the exchange.</p><a class="btn btn-primary" href="firm-new.html">${icon('plus')}New Firm</a></div>`;
     return;
   }
-  $('#results').innerHTML = `
+  patchListTable($('#results'), `
     <table class="tbl">
-      <thead><tr>${sortHeader('name', 'Name')}${sortHeader('id', 'Firm ID', 'hide-compact')}${sortHeader('type', 'Type', 'hide-compact')}${sortHeader('state', 'State')}<th class="acts"><span class="sr">Actions</span></th></tr></thead>
+      <thead><tr>${sortHeader('name', 'Name')}${sortHeader('id', 'Firm ID', 'hide-compact')}<th class="hide-compact">Type</th><th>State</th><th class="acts"><span class="sr">Actions</span></th></tr></thead>
       <tbody>${pageRows.map(rowHTML).join('')}</tbody>
     </table>
-    ${pagerHTML(rows.length)}`;
+    ${pagerHTML(rows.length)}`);
 }
 
 function rowHTML(f) {

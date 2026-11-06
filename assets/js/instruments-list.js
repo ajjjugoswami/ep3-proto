@@ -15,8 +15,7 @@ const INSTRUMENT_SORTS = {
   tradable: i => (i.nonTradable ? 'N' : 'Y'),
   clearingHouse: i => i.clearingHouse,
   scheduled: i => (i.isScheduled ? 'Scheduled' : 'Manual'),
-  state: i => i.state,
-  open: instStat('open', 'openSetTime'),
+  open:instStat('open', 'openSetTime'),
   high: instStat('high', 'highSetTime'),
   low: instStat('low', 'lowSetTime'),
   close: instStat('close', 'closeSetTime'),
@@ -182,16 +181,16 @@ function refreshInstruments() {
     refreshSelection();
     return;
   }
-  $('#instResults').innerHTML = `<div class="table-scroll"><table class="tbl tbl-wide">
+  patchListTable($('#instResults'), `<div class="table-scroll"><table class="tbl tbl-wide">
       <thead><tr>
         <th class="check-cell"><input type="checkbox" id="instCheckAll" aria-label="Select all on this page"></th>
-        ${sortHeader('productId', 'Product Name')}${sortHeader('id', 'ID (Symbol)')}${sortHeader('description', 'Description')}${sortHeader('tradable', 'Tradable')}${sortHeader('clearingHouse', 'Clearing House')}${sortHeader('scheduled', 'Scheduled')}${sortHeader('state', 'State')}
+        ${sortHeader('productId', 'Product Name')}${sortHeader('id', 'ID (Symbol)')}${sortHeader('description', 'Description')}${sortHeader('tradable', 'Tradable')}${sortHeader('clearingHouse', 'Clearing House')}${sortHeader('scheduled', 'Scheduled')}<th>State</th>
         ${sortHeader('open', 'Open', 'num')}${sortHeader('high', 'High', 'num')}${sortHeader('low', 'Low', 'num')}${sortHeader('close', 'Close', 'num')}${sortHeader('lastPrice', 'Last-Px', 'num')}${sortHeader('settlementPrice', 'Settl-Px', 'num')}
         <th class="acts"><span class="sr">Actions</span></th>
       </tr></thead>
       <tbody>${pageRows.map(instrumentRowHTML).join('')}</tbody>
     </table></div>
-    ${pagerHTML(rows.length)}`;
+    ${pagerHTML(rows.length)}`);
   refreshSelection();
 }
 

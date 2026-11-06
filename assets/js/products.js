@@ -22,7 +22,7 @@ function refreshProducts() {
   const pages = Math.max(1, Math.ceil(rows.length / productList.size));
   productList.page = Math.min(productList.page, pages - 1);
   const start = productList.page * productList.size;
-  $('#productResults').innerHTML = `<table class="tbl">
+  patchListTable($('#productResults'), `<table class="tbl">
       <thead><tr>${sortHeader('id', 'Name ID')}${sortHeader('description', 'Product Description', 'hide-compact')}${sortHeader('clearingHouse', 'Clearing House', 'hide-compact')}<th class="acts"><span class="sr">Actions</span></th></tr></thead>
       <tbody>${rows.slice(start, start + productList.size).map(p => `<tr data-href="${esc(productHref(p.id))}">
         <td><a class="firm-name mono" href="${esc(productHref(p.id))}">${esc(p.id)}</a><span class="firm-id show-compact">${esc(p.description)}</span></td>
@@ -35,7 +35,7 @@ function refreshProducts() {
         </td>
       </tr>`).join('')}</tbody>
     </table>
-    ${pagerHTML(rows.length)}`;
+    ${pagerHTML(rows.length)}`);
 }
 
 function renderProductPage() {
