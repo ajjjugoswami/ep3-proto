@@ -28,6 +28,7 @@
   --accent-soft: rgba(37, 99, 235, .09);
   --accent-soft-hover: rgba(37, 99, 235, .16);
   --table-head: #F8FAFC;
+  --chart-1: #1D4ED8;
   --chip-bg: #EEF0FF;
   --chip-line: #C7CCF7;
   --chip-ink: #3730A3;
@@ -77,34 +78,35 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --shell: #08090C;
-  --nav-active: rgba(255, 255, 255, .08);
+  --shell: #0A1222;
+  --nav-active: rgba(140, 172, 232, .13);
   --nav-icon: #7DB6EC;
   --nav-icon-active: #B9DD62;
   --logoff: #F87171;
   --logoff-bg: rgba(248, 113, 113, .1);
   --logoff-bg-hover: rgba(248, 113, 113, .18);
-  --seg-bg: rgba(255, 255, 255, .06);
-  --seg-active: rgba(255, 255, 255, .14);
-  --seg-shadow: 0 1px 2px rgba(0, 0, 0, .3);
-  --scroll-thumb: rgba(255, 255, 255, .18);
-  --scroll-thumb-hover: rgba(255, 255, 255, .32);
-  --bg: #0E1014;
-  --surface: #15181E;
-  --surface-2: #1C2027;
-  --surface-3: #272C35;
-  --line: rgba(255, 255, 255, .08);
-  --line-strong: rgba(255, 255, 255, .17);
-  --ink: #F4F5F7;
-  --ink-2: #C2C7D0;
-  --ink-3: #969DAA;
+  --seg-bg: rgba(140, 172, 232, .08);
+  --seg-active: rgba(140, 172, 232, .2);
+  --seg-shadow: 0 1px 2px rgba(2, 8, 20, .4);
+  --scroll-thumb: rgba(160, 185, 230, .22);
+  --scroll-thumb-hover: rgba(160, 185, 230, .38);
+  --bg: #0F192C;
+  --surface: #142036;
+  --surface-2: #1A2840;
+  --surface-3: #24344F;
+  --line: rgba(150, 178, 230, .12);
+  --line-strong: rgba(150, 178, 230, .24);
+  --ink: #F2F5FA;
+  --ink-2: #C3CCDB;
+  --ink-3: #93A0B8;
   --title: #FFFFFF;
   --accent: #7DB6EC;
   --accent-fill: #2A67C4;
   --accent-fill-hover: #3474D2;
   --accent-soft: rgba(125, 182, 236, .13);
   --accent-soft-hover: rgba(125, 182, 236, .2);
-  --table-head: #1A1E25;
+  --table-head: #18253C;
+  --chart-1: #5B93E6;
   --chip-bg: rgba(129, 140, 248, .16);
   --chip-line: rgba(129, 140, 248, .4);
   --chip-ink: #C7D2FE;
@@ -126,20 +128,20 @@
   --bad-fill-hover: #D04B34;
   --buy-bg: rgba(125, 182, 236, .09);
   --sell-bg: rgba(255, 155, 133, .08);
-  --neutral-ink: #C2C7D0;
-  --neutral-bg: #272C35;
-  --neutral-dot: #969DAA;
+  --neutral-ink: #C3CCDB;
+  --neutral-bg: #24344F;
+  --neutral-dot: #93A0B8;
   --info-ink: #7DB6EC;
   --info-bg: rgba(125, 182, 236, .13);
   --info-dot: #7DB6EC;
   --today-bg: rgba(125, 182, 236, .08);
-  --line-soft: rgba(255, 255, 255, .04);
-  --glass: rgba(26, 29, 36, .8);
-  --glass-line: rgba(255, 255, 255, .1);
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, .3);
-  --shadow-2: 0 10px 34px rgba(0, 0, 0, .42), 0 1px 3px rgba(0, 0, 0, .3);
-  --shadow-3: 0 28px 70px rgba(0, 0, 0, .6), 0 2px 8px rgba(0, 0, 0, .4);
-  --scrim: rgba(3, 7, 15, .58);
+  --line-soft: rgba(150, 178, 230, .06);
+  --glass: rgba(22, 35, 59, .82);
+  --glass-line: rgba(150, 178, 230, .16);
+  --shadow-1: 0 1px 2px rgba(2, 8, 20, .35);
+  --shadow-2: 0 10px 34px rgba(2, 8, 20, .5), 0 1px 3px rgba(2, 8, 20, .35);
+  --shadow-3: 0 28px 70px rgba(2, 8, 20, .65), 0 2px 8px rgba(2, 8, 20, .45);
+  --scrim: rgba(3, 9, 22, .6);
 }
 @media (prefers-contrast: more) {
   :root {
@@ -989,7 +991,7 @@ a.dash-row:hover { background: var(--surface-2); }
 .dash-bar::-webkit-progress-bar { background: var(--surface-3); border-radius: 999px; }
 .dash-bar::-webkit-progress-value { background: currentColor; border-radius: 999px; }
 .dash-bar::-moz-progress-bar { background: currentColor; border-radius: 999px; }
-.dash-bar.dash-bar-accent { color: var(--accent-fill); }
+.dash-bar.dash-bar-accent { color: var(--chart-1); }
 .dash-card-sub { margin-top: 1px; color: var(--ink-3); font-size: 12.5px; }
 .dash-card .list-head { align-items: flex-start; }
 .dash-figures { display: flex; gap: 22px; text-align: right; }
@@ -1006,13 +1008,13 @@ a.dash-row:hover { background: var(--surface-2); }
 .chart-grid { stroke: var(--line); stroke-width: 1; }
 .chart-axis { stroke: var(--line-strong); stroke-width: 1; }
 .chart-tick { fill: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; }
-.chart-col { fill: var(--accent-fill); transition: opacity .12s; }
+.chart-col { fill: var(--chart-1); transition: opacity .12s; }
 .chart-hit { fill: transparent; cursor: default; }
 .chart-hit:focus-visible { outline: none; fill: var(--accent-soft); }
 .chart-bar:hover .chart-col, .chart-bar:focus-within .chart-col { opacity: .72; }
 .spark { display: block; overflow: visible; }
-.spark-line { fill: none; stroke: var(--accent-fill); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.spark-dot { fill: var(--accent-fill); stroke: var(--surface); stroke-width: 2; }
+.spark-line { fill: none; stroke: var(--chart-1); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.spark-dot { fill: var(--chart-1); stroke: var(--surface); stroke-width: 2; }
 .seg-bar { display: block; }
 .seg-ok { fill: var(--ok-dot); }
 .seg-warn { fill: var(--warn-dot); }
