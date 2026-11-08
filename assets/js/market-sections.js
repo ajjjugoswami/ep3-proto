@@ -164,20 +164,23 @@ const SYNC_GROUPS = {
   syncAdditionalInfo: ['marketOrderProtectionBasisPoints', 'skipRiskAndCurrencyChecks', ...LIMIT_GROUPS.flatMap(g => [...g.low, ...g.high])],
 };
 
+const irsOnly = state => state.type === IT.IRS;
+
+const INSTRUMENT_SEARCH = { k: 'id', label: 'Instrument ID (Symbol)', ph: 'Find by exact symbol', exact: true };
+
 const INSTRUMENT_FILTERS = [
-  { k: 'productName', label: 'Product Name (ID)', search: true, primary: true },
-  { k: 'id', label: 'Instrument ID (Symbol)', search: true, primary: true },
-  { k: 'state', label: 'Instrument State', options: INST_STATES, primary: true },
-  { k: 'type', label: 'Instrument Type', options: PRODUCT_TYPES, primary: true },
-  { k: 'isScheduled', label: 'Schedule State', options: OPT.scheduleFilter },
+  { k: 'productName', label: 'Product Name (ID)', short: 'Product', options: () => market.products.map(p => p.id) },
+  { k: 'state', label: 'Instrument State', short: 'State', options: INST_STATES },
+  { k: 'type', label: 'Instrument Type', short: 'Type', options: PRODUCT_TYPES },
+  { k: 'isScheduled', label: 'Schedule State', short: 'Schedule', options: OPT.scheduleFilter },
   { k: 'isTradable', label: 'Tradable', options: OPT.tradableFilter },
-  { k: 'hasLegs', label: 'Has Legs', options: OPT.legsFilter },
-  { k: 'tradeDate', label: 'Trade Date', date: true, irs: true },
-  { k: 'clearingHouse', label: 'Clearing House', options: clearingHouseNames, irs: true },
-  { k: 'basecurrency', label: 'Currency', options: OPT.currency, irs: true },
-  { k: 'tenor', label: 'Tenor', search: true, irs: true },
-  { k: 'floatingRateIndex', label: 'Floating Rate Index', options: OPT.rateIndex, irs: true },
-  { k: 'floatingRateIndexTenor', label: 'Floating Rate Index Tenor', search: true, irs: true },
+  { k: 'hasLegs', label: 'Has Legs', short: 'Legs', options: OPT.legsFilter },
+  { k: 'tradeDate', label: 'Trade Date', date: true, irs: true, when: irsOnly },
+  { k: 'clearingHouse', label: 'Clearing House', options: clearingHouseNames, irs: true, when: irsOnly },
+  { k: 'basecurrency', label: 'Currency', options: OPT.currency, irs: true, when: irsOnly },
+  { k: 'tenor', label: 'Tenor', irs: true, when: irsOnly },
+  { k: 'floatingRateIndex', label: 'Floating Rate Index', short: 'Rate Index', options: OPT.rateIndex, irs: true, when: irsOnly },
+  { k: 'floatingRateIndexTenor', label: 'Floating Rate Index Tenor', short: 'Index Tenor', irs: true, when: irsOnly },
 ];
 
 const STAT_PRICE_FIELDS = [

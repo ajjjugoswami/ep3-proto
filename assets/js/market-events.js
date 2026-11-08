@@ -3,12 +3,6 @@
 Object.assign(ACT, {
   'inst-row-menu'(el) { openMenu(el, instrumentMenuItems(instrumentById(el.dataset.id), false)); },
   'inst-detail-menu'(el) { openMenu(el, instrumentMenuItems(instrumentById(el.dataset.id), true)); },
-  'inst-clear-filters'() {
-    Object.assign(instList, blankInstrumentFilters(), { page: 0 });
-    refreshInstrumentFilters();
-    refreshInstruments();
-    $('[data-filter]').focus();
-  },
   'inst-halt-all'() { haltAllInstruments(); },
   'inst-ops-menu'(el) { openMenu(el, instrumentOpsMenuItems()); },
   'inst-refresh'() { refreshMarketData(); },
@@ -92,26 +86,14 @@ Object.assign(ACT, {
 
 document.addEventListener('input', e => {
   const t = e.target;
-  if (t.matches('input[data-filter]') && t.type === 'search') {
-    instList[t.dataset.filter] = t.value;
-    instList.page = 0;
-    refreshInstruments();
-    return;
-  }
   if (form && form.module && t.dataset.field && !t.closest('#sheet')) syncMirrors(t.dataset.field);
 });
 
 document.addEventListener('change', e => {
   const t = e.target;
-  if (t.matches('[data-filter]') && t.type !== 'search') {
-    instList[t.dataset.filter] = t.value;
+  if (t.id === 'instNewest') {
+    instList.newest = t.checked;
     instList.page = 0;
-    if (t.dataset.filter === 'type') {
-      if (t.value !== IT.IRS) INSTRUMENT_FILTERS.filter(f => f.irs).forEach(f => { instList[f.k] = ''; });
-      refreshInstrumentFilters();
-      enhanceSelects();
-      $('[data-filter="type"]').focus();
-    }
     refreshInstruments();
     return;
   }

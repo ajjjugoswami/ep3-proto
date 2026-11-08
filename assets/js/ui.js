@@ -109,16 +109,34 @@ function closeSelect(refocus = true) {
   if (refocus && sel._btn.isConnected) sel._btn.focus({ preventScroll: true });
 }
 
-function setActiveOption(index) {
+const SELECT_SEARCH_MIN = 13;
+const visibleOptions = () => $$('.select-opt:not([hidden])', openSel.pop);
+
+function setActiveOption(position) {
   if (!openSel) return;
-  const items = $$('.select-opt', openSel.pop);
-  openSel.active = Math.max(0, Math.min(index, items.length - 1));
-  items.forEach((item, i) => item.classList.toggle('active', i === openSel.active));
+  const items = visibleOptions();
+  $$('.select-opt.active', openSel.pop).forEach(item => item.classList.remove('active'));
+  if (!items.length) return;
+  openSel.active = Math.max(0, Math.min(position, items.length - 1));
   const current = items[openSel.active];
-  openSel.sel._btn.setAttribute('aria-activedescendant', current.id);
+  current.classList.add('active');
+  (openSel.find || openSel.sel._btn).setAttribute('aria-activedescendant', current.id);
   const { pop } = openSel;
-  if (current.offsetTop < pop.scrollTop) pop.scrollTop = current.offsetTop;
+  const top = current.offsetTop - (openSel.find ? openSel.find.parentElement.offsetHeight : 0);
+  if (top < pop.scrollTop) pop.scrollTop = top;
   else if (current.offsetTop + current.offsetHeight > pop.scrollTop + pop.clientHeight) pop.scrollTop = current.offsetTop + current.offsetHeight - pop.clientHeight;
+}
+
+function pickActiveOption() {
+  const item = openSel && visibleOptions()[openSel.active];
+  if (item) pickOption(Number(item.dataset.i));
+}
+
+function filterSelectOptions(needle) {
+  const text = needle.trim().toLowerCase();
+  $$('.select-opt', openSel.pop).forEach(item => { item.hidden = !!text && !item.textContent.toLowerCase().includes(text); });
+  $('.select-none', openSel.pop).hidden = visibleOptions().length > 0;
+  setActiveOption(0);
 }
 
 function pickOption(index) {
@@ -143,7 +161,10 @@ function openSelect(sel) {
   pop.className = 'select-pop';
   pop.id = `select-pop-${uid}`;
   pop.setAttribute('role', 'listbox');
-  pop.innerHTML = [...sel.options].map((option, i) => `<div class="select-opt" role="option" id="select-${uid}-${i}" data-i="${i}" aria-selected="${i === sel.selectedIndex}"><span>${esc(option.textContent)}</span>${icon('check')}</div>`).join('');
+  const searchable = sel.options.length >= SELECT_SEARCH_MIN;
+  pop.innerHTML = `${searchable ? `<div class="select-find search">${icon('search')}<input class="field" type="search" placeholder="Search" aria-label="Search options" aria-controls="${pop.id}" autocomplete="off" spellcheck="false"></div>` : ''}
+    ${[...sel.options].map((option, i) => `<div class="select-opt" role="option" id="select-${uid}-${i}" data-i="${i}" aria-selected="${i === sel.selectedIndex}"><span>${esc(option.textContent)}</span>${icon('check')}</div>`).join('')}
+    <p class="select-none" hidden>No matches.</p>`;
   (sel.closest('dialog') || document.body).append(pop);
   const rect = btn.getBoundingClientRect();
   pop.style.minWidth = `${rect.width}px`;
@@ -151,40 +172,47 @@ function openSelect(sel) {
   const below = rect.bottom + 4;
   pop.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - size.width - 8))}px`;
   pop.style.top = `${below + size.height > innerHeight - 8 ? Math.max(8, rect.top - size.height - 4) : below}px`;
-  pop.addEventListener('mousedown', e => e.preventDefault());
+  pop.addEventListener('mousedown', e => { if (!e.target.closest('.select-find')) e.preventDefault(); });
   pop.addEventListener('mousemove', e => {
     const item = e.target.closest('.select-opt');
-    if (item && openSel && Number(item.dataset.i) !== openSel.active) setActiveOption(Number(item.dataset.i));
+    const position = item && openSel ? visibleOptions().indexOf(item) : -1;
+    if (position >= 0 && position !== openSel.active) setActiveOption(position);
   });
   pop.addEventListener('click', e => {
     const item = e.target.closest('.select-opt');
     if (item) pickOption(Number(item.dataset.i));
   });
-  openSel = { sel, pop, active: 0 };
+  const find = $('.select-find input', pop);
+  openSel = { sel, pop, active: 0, find };
   btn.setAttribute('aria-expanded', 'true');
   btn.setAttribute('aria-controls', pop.id);
   setActiveOption(Math.max(0, sel.selectedIndex));
+  if (find) {
+    find.addEventListener('input', () => filterSelectOptions(find.value));
+    find.addEventListener('keydown', e => onSelectKey(e, sel, true));
+    find.focus({ preventScroll: true });
+  }
 }
 
-function onSelectKey(e, sel) {
+function onSelectKey(e, sel, typing = false) {
   const isOpen = openSel && openSel.sel === sel;
   if (!isOpen) {
     if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); openSelect(sel); }
     return;
   }
-  const count = sel.options.length;
   if (e.key === 'ArrowDown') { e.preventDefault(); setActiveOption(openSel.active + 1); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveOption(openSel.active - 1); }
-  else if (e.key === 'Home') { e.preventDefault(); setActiveOption(0); }
-  else if (e.key === 'End') { e.preventDefault(); setActiveOption(count - 1); }
-  else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickOption(openSel.active); }
+  else if (e.key === 'Home' && !typing) { e.preventDefault(); setActiveOption(0); }
+  else if (e.key === 'End' && !typing) { e.preventDefault(); setActiveOption(visibleOptions().length - 1); }
+  else if (e.key === 'Enter' || (e.key === ' ' && !typing)) { e.preventDefault(); pickActiveOption(); }
   else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeSelect(); }
   else if (e.key === 'Tab') closeSelect(false);
-  else if (e.key.length === 1) {
+  else if (e.key.length === 1 && !typing) {
+    if (openSel.find) { openSel.find.focus(); return; }
     const key = e.key.toLowerCase();
-    const options = [...sel.options];
-    const after = options.findIndex((o, i) => i > openSel.active && o.textContent.toLowerCase().startsWith(key));
-    const match = after >= 0 ? after : options.findIndex(o => o.textContent.toLowerCase().startsWith(key));
+    const items = visibleOptions().map(item => item.textContent.toLowerCase());
+    const after = items.findIndex((text, i) => i > openSel.active && text.startsWith(key));
+    const match = after >= 0 ? after : items.findIndex(text => text.startsWith(key));
     if (match >= 0) setActiveOption(match);
   }
 }

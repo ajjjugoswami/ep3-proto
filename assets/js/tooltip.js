@@ -33,14 +33,24 @@ function showTip(btn) {
   openTip = { btn, pop };
 }
 
+const TIP_TARGETS = '.tip, .chart-hit';
+
 document.addEventListener('mouseover', e => {
-  const btn = e.target.closest && e.target.closest('.tip');
+  const btn = e.target.closest && e.target.closest(TIP_TARGETS);
   if (btn) showTip(btn);
   else hideTip();
 });
 
+document.addEventListener('focusin', e => {
+  if (e.target.matches && e.target.matches('.chart-hit')) showTip(e.target);
+});
+
+document.addEventListener('focusout', e => {
+  if (e.target.matches && e.target.matches('.chart-hit')) hideTip();
+});
+
 document.addEventListener('click', e => {
-  if (!e.target.closest('.tip')) hideTip();
+  if (!e.target.closest(TIP_TARGETS)) hideTip();
 });
 
 document.addEventListener('keydown', e => {

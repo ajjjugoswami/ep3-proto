@@ -59,11 +59,9 @@ let spy = null;
 let spyLock = 0;
 let assocState = null;
 let firstList = session.get('listShown') !== '1';
-function isPhoneWidth() {
-  return matchMedia('(max-width: 680px)').matches;
-}
-const list = { q: '', type: '', state: '', deleted: false, showFilters: !isPhoneWidth(), sort: 'seed', dir: 1, page: 0, size: 10, ...readListState('firmsList') };
-let listCtl = { state: list, refresh: () => refreshList(), removeFilter: key => removeFirmFilter(key), noun: 'firms' };
+const list = { q: '', type: '', state: '', deleted: false, sort: 'seed', dir: 1, page: 0, size: 10, ...readListState('firmsList') };
+const firmListCtl = () => ({ state: list, refresh: () => refreshList(), noun: 'firms', search: { k: 'q', label: 'Firm name or ID', ph: 'Search firm name or ID' }, filters: () => FIRM_FILTERS });
+let listCtl = firmListCtl();
 
 const persist = () => storage.set(STORE_KEY, JSON.stringify(firms));
 const clone = o => JSON.parse(JSON.stringify(o));

@@ -18,7 +18,9 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | Page | Screen | Query params |
 |---|---|---|
 | `index.html` | Log in, or Register with `register=true` | `register` |
+| `dashboard.html` | Dashboard, the landing page after login | |
 | `firms.html` | Firm list | |
+| `users.html`, `accounts.html` | Users and accounts across every firm | |
 | `firm.html` | Firm profile and tabs | `id`, `tab` |
 | `firm-new.html` | Create a firm | `type` (optional preset) |
 | `firm-edit.html` | Edit a firm | `id` |
@@ -42,6 +44,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `js/sprite.js` | Injects the logo and icon SVG sprite |
 | `js/tips.js` | `TIPS`, the tooltip wording from the real app. Loads before `config.js` |
 | `js/tooltip.js` | `tipHTML` and the tooltip bubble |
+| `js/filter-bar.js` | The list filter bar: search box, filter buttons and their popovers, `setListFilter`, `clearListFilters` |
 | `js/config.js` | Storage keys, firm types, field schema, tabs, associations, roles, record definitions, nav, `APP_INFO` |
 | `js/seed.js` | Sample firms and the generator that fills their tabs |
 | `js/core.js` | Page and URL helpers, storage, state, `hrefFor`, `go`, flash toasts |
@@ -67,6 +70,9 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `js/books.js` | Unaggregated book |
 | `js/products.js` | Product list, view page, form and child instrument sync |
 | `js/calendars.js` | Holiday calendars and events |
+| `js/charts.js` | Inline SVG charts: column chart, sparkline, segmented bar, `chartSlotHTML` and `paintCharts` |
+| `js/directory.js` | Users and Accounts list pages (`DIRECTORY`), filters, row menu, firm picker for new records |
+| `js/dashboard.js` | Dashboard tiles, charts and cards, `openFilteredList` |
 | `js/events.js` | Actions and document event listeners |
 | `js/market-events.js` | Adds the instruments module's actions to `ACT`, and its listeners |
 | `js/router.js` | Picks what to render for the current page, then boots the app |
@@ -74,7 +80,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 
 ## How the code works
 
-- **Plain scripts, not ES modules.** This keeps double-clicking `index.html` working. Top-level `const` and functions are shared between files, so script order matters only for code that runs at load. New script files must be added to all 18 HTML files.
+- **Plain scripts, not ES modules.** This keeps double-clicking `index.html` working. Top-level `const` and functions are shared between files, so script order matters only for code that runs at load. New script files must be added to all 21 HTML files.
 - **Rendering:** pages render into `#view` from template strings. Always pass dynamic values through `esc()`.
 - **Actions:** add a `data-act` attribute and a matching entry in `ACT` in `events.js`, or in `market-events.js` for the instruments module.
 - **Dropdowns:** render a normal `<select>`. `enhanceSelects()` replaces it with the themed dropdown automatically.
@@ -88,8 +94,20 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 - **Instrument and product forms are schema driven.** A section lists items in the real field order: `key`, `key*` (required), `=key` (read-only mirror), `key|Label`, `#Subheading` or `#Subheading|tipKey`, `@block`. Field types come from `FIELD_RULES` and `FIELD_DEFS`. To change a type's form, edit `market-sections.js`, not the render code.
 - **Module forms** use the same `form` object as firms, with a `form.module` holding `body`, `validate`, `submit` and `onChange`. Nested values use dotted field keys such as `legs.0.symbol`.
 - **Sheets:** use `openFormSheet` for a form in a dialog and `openWideSheet` for a table in a dialog.
-- **Lists:** set `listCtl` to the page's list state and refresh function, so `sortHeader`, `pagerHTML` and the shared sort and page actions work. Sort rows with `sortRows`, and draw the table with `patchListTable` rather than setting `innerHTML`.
+- **Lists:** set `listCtl` to the page's list state and refresh function, so `sortHeader`, `pagerHTML` and the shared sort and page actions work. For filters, also give it `search` (`k`, `label`, `ph`) and `filters()`, a list of `{ k, label, short, options | date, when }`, where a filter with neither `options` nor `date` is a text filter. Then render `filterBarHTML(end)`. `onFilter(key, value)` runs before each refresh, for dependent filters. Sort rows with `sortRows`, and draw the table with `patchListTable` rather than setting `innerHTML`.
 - **Tooltips:** give a field a `tip`, either text or a function of the values, and `fieldRow` and `readRow` show it. Elsewhere use `tipHTML`.
+- **Charts:** render a slot with `chartSlotHTML(key, (width, height) => svg)` and call `paintCharts()` after the page renders. It draws at the slot's real size and redraws on resize. Colours come from classes in `app.css`, never from the series data. Give a slot a fixed or flex height so drawing can't change its size.
+- **Linking to a filtered list:** use `openFilteredList(list, key, value)` from `dashboard.js`, which saves the list state and opens the page.
+
+## Built for millions of records
+
+Production EP3 holds millions of users, accounts and instruments, so every list, filter and dashboard pattern must work at that scale, not just on the sample data. Design to what the real APIs in ep3-domain can do:
+
+- **Users, Accounts, Instruments and market stats history** page with a cursor (`page_token`, `next_page_token`, `eof`). They return no total count and support no column sorting (Instruments only has `newest_first`), and ID and symbol filters match exactly. So these lists use `cursorPagerHTML` (Rows 26–50, Previous / Next, rows per page) with no page numbers or totals. They have no header sorting, and their search box is an exact lookup that runs on Enter (`search.exact`). Instruments has a Newest first toggle. In the prototype, `cursorPage` slices the sample data in place of the server call.
+- **Firms and Products** come back in full from `ListFirms` and `ListProducts`, so those lists keep `pagerHTML` with page numbers and totals, header sorting and live partial search.
+- **Long option lists:** filter dropdowns render at most 50 options with a search box, and say how many more match. Themed dropdowns with 13 or more options get a search box. Never put an unbounded list in the DOM.
+- **Exact text filters** (`exact: true`, such as Collateral Account) apply on Enter or Apply, not on each keystroke.
+- **Dashboard counts** for users and accounts (totals, states, roles) need a server-side stats endpoint. Never compute them by paging through full lists. The prototype computes them from sample data.
 
 ## Rules copied from the real admin UI
 
@@ -107,6 +125,12 @@ Tabs by firm type, after Firm Profile:
 - **Type-specific fields:** Participants get the 4 trading toggles, Disintermediated, Participant Type and Clearing Integration. Clearing Members get only Disintermediated.
 - **Roles** depend on firm type, as in `UserRoleListContainer.js`.
 - **Delete** is a soft delete for firms: Show Deleted, then Restore.
+
+Users and Accounts, from `pages/Users.js`, `pages/Accounts.js`, `UsersFilter.js`, `UsersDataGrid.js`, `AccountsFilter.js` and `AccountDataGrid.js`:
+
+- **Columns** come from `ENTITIES.users.columns` and `ENTITIES.accounts.columns`, the same as the firm tabs.
+- **Filters:** Users have User ID, User State, User Role and Firm. Accounts have Account ID, Collateral Account, Account State and Firm. Both have Show Deleted.
+- **Delete** is a soft delete for users and accounts, from the lists, the firm tabs and the view page. Deleted records are hidden from firm tabs and dashboard counts, and their edit URL redirects to the view page, which offers Restore.
 
 Instruments module, from `pages/Instruments.js`, `InstrumentForm.js` and `ProductForm.js`:
 
@@ -131,19 +155,20 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Log in and Register:** a white card centred on a blue gradient page, with no illustration or side panel. The user doesn't want Remember me or Forgot password.
 - **Change State:** opens as a dialog over the current page, for one instrument or a selection, not a separate page. Save applies straight away with no second confirmation. EOD actions and resolution are in the same dialog and do ask first.
-- **Filter chips:** on the firm and instrument lists, each active filter shows as a chip below the filters, with an X to remove it and a Clear all link. These replace the Reset button. Show Deleted is a toggle, not a chip.
-- **Firm list:** labelled Firm Name, Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in the name cells. Row actions are View and Edit icons and a More menu, the same as the instrument list.
-- **List page design:** Firms and Instruments follow the user's reference design. A title with a subtitle, a control bar (`controlBarHTML`), a Filters button that shows or hides the filter grid, chips with the label outside the pill, status pills with no dots, a shaded Actions column, and a pager below the table with page numbers.
+- **Filter bar:** the user rejected the labelled filter grid as looking like the old admin UI. The firm, instrument, user and account lists use one filter row (`filterBarHTML` in `filter-bar.js`): a search box, then a dashed button per filter that opens a dropdown, a text box or the date picker. A set filter shows its value in a tinted button with an X, and a Clear all link appears. Filters apply live, and there is no Filters toggle, chips row or Reset button. Show Deleted is a toggle at the right end of the row. Instrument filters for interest rate swaps only appear when Type is Interest Rate Swap.
+- **Firm list:** Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in the name cells. Row actions are View and Edit icons and a More menu, the same as the instrument list.
+- **List page design:** Firms and Instruments follow the user's reference design. A title with a subtitle, the filter bar, status pills with no dots, a shaded Actions column, and a pager below the table: page numbers on Firms and Products, and Previous / Next on the cursor-paged lists.
 - **Colour:** keep it restrained. The user tried coloured firm type pills, coloured row action icons and coloured section markers, and rejected them as too colourful. Use colour for status and primary actions only.
-- **Instrument list:** Halt All, Filters and More sit in the Trading Controls bar. More holds Export, settlement price actions and Resume. Row actions are View and Edit icons and a More menu: Duplicate, Halt / Resume, View Records (the market stats history page), State, Book, Review Market Stats and Delete. The actions column stays visible while the wide table scrolls.
-- **Phones (up to 680px):** firm and instrument rows become cards, sort buttons sit in a scrolling row above them, and filters start hidden behind the Filters button.
+- **Instrument list:** Halt All and More sit in the Trading Controls bar (`controlBarHTML`), above the filter bar. More holds Export, settlement price actions and Resume. Row actions are View and Edit icons and a More menu: Duplicate, Halt / Resume, View Records (the market stats history page), State, Book, Review Market Stats and Delete. The actions column stays visible while the wide table scrolls.
+- **Phones (up to 680px):** firm and instrument rows become cards, sort buttons sit in a scrolling row above them, and the filter buttons wrap below a full-width search box.
 - **List scrolling:** the firm, instrument and product lists have one scroll area, the rows. The filters stay above it, the column headers and pager stay visible, and the side scrollbar stays on screen. Phones and very short screens scroll the whole page. Use `.list-view`, `.list-card` and `.table-scroll` for new lists.
-- **Sortable columns:** firm, instrument and product lists sort from the column header, with an arrow always visible. Type and State columns don't sort. Sorting updates the rows in place and keeps column widths, so the table doesn't flicker. The first click sorts ascending, the next descending, and sorting returns to the first page. Blank values stay last. The real instrument grid has no sorting, so this is an addition there.
+- **Sortable columns:** the firm and product lists sort from the column header, with an arrow always visible. Type and State columns don't sort. Sorting updates the rows in place and keeps column widths, so the table doesn't flicker. The first click sorts ascending, the next descending, and sorting returns to the first page. Blank values stay last. Instrument, user and account lists don't sort, because their APIs can't (see *Built for millions of records*).
 - **Tooltips:** a question-circle icon opens a themed bubble on hover or click, with the real app's full wording. Where the real app uses a tooltip, it replaces inline help text. The icons aren't in the tab order, so long forms stay quick to tab through.
 - **Firm pages:** fixed header with underlined tabs. Only the content scrolls.
 - **Forms:** real field order flowing into responsive columns, 44px inputs, Save then Cancel in a footer pinned to the bottom left.
 - **Toasts:** top centre, one at a time, no Undo.
 - **Buttons:** 8px radius, not pills.
+- **Dashboard:** first sidebar item, in an Overview group above Firms. Stat tiles with thin state bars, a Notional Traded column chart for the last 24 hours, Needs Attention, Most Active Instruments with a 24h change and trend sparkline, Upcoming Holidays, and bar lists for instruments by state, firms by type and users by role. Every count links to the matching filtered list. Single-series charts use the accent colour, and status colours are only used for states.
 
 ## Coding rules
 
@@ -155,7 +180,8 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 ## Not built yet
 
 - An account's own tabs: Users, Positions, Balances, Ledger, Whitelist, Commissions, Associations, Bank Accounts and Position Limits.
-- Every sidebar page except Firms and Instruments, including Change Password. They show a "not part of this prototype" message.
+- Every sidebar page except Dashboard, Firms, Users, Accounts and Instruments, including Change Password. They show a "not part of this prototype" message.
+- The Properties filter on the Accounts list, because sample accounts have no properties.
 - Multi-factor enrollment on login and Single Sign On.
 - Pagination on firm tabs, and the firm view page still groups fields where the real UI shows a plain list.
 - Firm service pages use a back link, where the real UI keeps the firm tabs.
@@ -173,6 +199,8 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Export Data** writes the list's columns. In the real app the server builds the file.
 - **Product Question** is a plain text field, where the real UI suggests earlier questions.
 - **Register:** nothing is saved, and any username and password still logs in. A token registers if it is a JWT with a `sub`, and anything else shows "Unable to register user." **Use a sample token** is only in the prototype. The password check runs in the browser with made-up rules, where the real app calls `checkPassword`.
+- **Dashboard** doesn't exist in the real app, and logging in opens it where the real app opens Firms. Its numbers are computed from the sample data, and the hourly notional and price trends come from `historyRows`. In production, the user and account counts, users by role and the activity figures need a stats endpoint.
+- **Add New User or Account** from the lists asks for the firm in a dialog first, then opens the firm's record form. The real form has a Firm dropdown.
 - **Reset:** clear this site's browser data to restore the sample firms and instruments.
 
 ## Testing

@@ -1,38 +1,25 @@
 'use strict';
 
-const blankInstrumentFilters = () => Object.fromEntries(INSTRUMENT_FILTERS.map(f => [f.k, '']));
-const instList = { page: 0, size: 10, showFilters: !isPhoneWidth(), sort: '', dir: 1, ...blankInstrumentFilters(), ...readListState('instList') };
+const blankInstrumentFilters = () => Object.fromEntries([INSTRUMENT_SEARCH, ...INSTRUMENT_FILTERS].map(f => [f.k, '']));
+const instList = { page: 0, size: 25, newest: false, ...blankInstrumentFilters(), ...readListState('instList') };
 const instSelected = new Set();
+const orderedInstruments = rows => (instList.newest ? [...rows].reverse() : rows);
+const newestFirstHTML = () => `<label class="check"><span class="switch"><input type="checkbox" role="switch" id="instNewest" ${instList.newest ? 'checked' : ''}><span></span></span>Newest first</label>`;
 
-const instStat = (valueKey, setTime) => i => {
-  const s = i.stats || {};
-  return s[setTime] && s[valueKey] !== '' && s[valueKey] !== undefined ? Number(s[valueKey]) : null;
-};
-const INSTRUMENT_SORTS = {
-  productId: i => i.productId,
-  id: i => i.id,
-  description: i => i.description,
-  tradable: i => (i.nonTradable ? 'N' : 'Y'),
-  clearingHouse: i => i.clearingHouse,
-  scheduled: i => (i.isScheduled ? 'Scheduled' : 'Manual'),
-  open:instStat('open', 'openSetTime'),
-  high: instStat('high', 'highSetTime'),
-  low: instStat('low', 'lowSetTime'),
-  close: instStat('close', 'closeSetTime'),
-  lastPrice: instStat('lastPrice', 'lastTradeSetTime'),
-  settlementPrice: instStat('settlementPrice', 'settlementSetTime'),
-};
-const sortedInstruments = rows => (INSTRUMENT_SORTS[instList.sort] ? sortRows(rows, INSTRUMENT_SORTS[instList.sort], instList.dir) : rows);
+const instrumentFilterActive = () => [INSTRUMENT_SEARCH, ...INSTRUMENT_FILTERS].some(f => instList[f.k]);
 
-const instrumentFilterActive = () => INSTRUMENT_FILTERS.some(f => instList[f.k]);
-const shownFilters = () => INSTRUMENT_FILTERS.filter(f => !f.irs || instList.type === IT.IRS);
+const clearIrsFilters = (key, value) => {
+  if ((key === 'type' || key === '') && value !== IT.IRS) INSTRUMENT_FILTERS.filter(f => f.irs).forEach(f => { instList[f.k] = ''; });
+};
+
+const instListCtl = () => ({ state: instList, refresh: refreshInstruments, noun: 'instruments', search: INSTRUMENT_SEARCH, filters: () => INSTRUMENT_FILTERS, onFilter: clearIrsFilters });
 
 function matchesInstrumentFilters(i) {
   const f = instList;
   const contains = (value, needle) => String(value || '').toLowerCase().includes(String(needle).trim().toLowerCase());
   if (f.state ? i.state !== f.state : i.state === 'Terminated') return false;
-  if (f.productName && !contains(i.productId, f.productName)) return false;
-  if (f.id && !contains(i.id, f.id)) return false;
+  if (f.productName && i.productId !== f.productName) return false;
+  if (f.id && i.id !== f.id.trim()) return false;
   if (f.type && i.type !== f.type) return false;
   if (f.isScheduled && (f.isScheduled === 'Scheduled') !== !!i.isScheduled) return false;
   if (f.isTradable && (f.isTradable === 'Tradable') !== !i.nonTradable) return false;
@@ -50,39 +37,6 @@ function matchesInstrumentFilters(i) {
 
 const filteredInstruments = () => market.instruments.filter(matchesInstrumentFilters);
 
-function filterFieldHTML(f) {
-  const value = instList[f.k];
-  if (f.options) {
-    const options = typeof f.options === 'function' ? f.options() : f.options;
-    return `<label class="filter-field"><span>${esc(f.label)}</span>
-      <select class="field" data-filter="${f.k}"><option value="">All</option>${options.map(o => `<option value="${esc(o)}" ${value === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>
-    </label>`;
-  }
-  return `<label class="filter-field"><span>${esc(f.label)}</span>
-    <input class="field filter-input" data-filter="${f.k}" type="${f.date ? 'date' : 'search'}" value="${esc(value)}" autocomplete="off" spellcheck="false">
-  </label>`;
-}
-
-function instrumentFiltersHTML() {
-  return `<div class="filters filters-grid" id="listFilters" ${instList.showFilters === false ? 'hidden' : ''}>${shownFilters().map(filterFieldHTML).join('')}</div>`;
-}
-
-function instrumentFilterChips() {
-  return INSTRUMENT_FILTERS.filter(f => String(instList[f.k] || '').trim()).map(f => ({
-    key: f.k,
-    label: f.label,
-    value: f.date ? formatWhen(instList[f.k]) : String(instList[f.k]).trim(),
-  }));
-}
-
-function removeInstrumentFilter(key) {
-  instList[key] = '';
-  instList.page = 0;
-  if (key === 'type') INSTRUMENT_FILTERS.filter(f => f.irs).forEach(f => { instList[f.k] = ''; });
-  refreshInstrumentFilters();
-  refreshInstruments();
-}
-
 function instrumentOpsMenuItems() {
   return [
     { label: 'Export Data', icon: 'download', run: exportInstruments },
@@ -95,7 +49,7 @@ function instrumentOpsMenuItems() {
 
 function renderInstruments() {
   document.title = 'Instruments · EP3 Admin';
-  listCtl = { state: instList, refresh: refreshInstruments, removeFilter: removeInstrumentFilter, noun: 'instruments' };
+  listCtl = instListCtl();
   $('#view').innerHTML = `<div class="detail-page">
     ${moduleHeadHTML('instruments', `
       <button class="btn btn-outline" type="button" data-act="inst-refresh">${icon('refresh')}Refresh MKT Data</button>
@@ -103,10 +57,8 @@ function renderInstruments() {
     <div class="detail-scroll list-view">
       ${controlBarHTML('chart', 'Trading Controls', 'Manage trading availability for instruments', `
         <button class="btn btn-outline-bad" type="button" data-act="inst-halt-all">${icon('stop')}Halt All</button>
-        ${filtersButtonHTML()}
         <button class="btn btn-line" type="button" data-act="inst-ops-menu" aria-haspopup="menu">${icon('more')}More</button>`)}
-      <div id="instFilters">${instrumentFiltersHTML()}</div>
-      <div class="filter-chips" id="instChips" role="group" aria-label="Active filters" hidden></div>
+      ${filterBarHTML(newestFirstHTML())}
       <input type="file" id="csvFile" accept=".csv" hidden>
       <p class="sr" id="instCount" aria-live="polite"></p>
       <div class="sel-bar" id="instSelection" hidden></div>
@@ -114,10 +66,6 @@ function renderInstruments() {
     </div>
   </div>`;
   refreshInstruments();
-}
-
-function refreshInstrumentFilters() {
-  $('#instFilters').innerHTML = instrumentFiltersHTML();
 }
 
 function selectionBarHTML(rows) {
@@ -173,16 +121,11 @@ function instrumentRowHTML(i) {
 
 function refreshInstruments() {
   saveListState('instList', instList);
-  const rows = sortedInstruments(filteredInstruments());
-  const pages =Math.max(1, Math.ceil(rows.length / instList.size));
-  instList.page = Math.min(instList.page, pages - 1);
-  const start = instList.page * instList.size;
-  const pageRows = rows.slice(start, start + instList.size);
-  $('#instCount').textContent = `${rows.length} instrument${rows.length === 1 ? '' : 's'}`;
-  showFilterChips($('#instChips'), instrumentFilterChips(), 'inst-clear-filters');
-  if (!rows.length) {
+  const { rows: pageRows, hasMore } = cursorPage(orderedInstruments(filteredInstruments()), instList);
+  $('#instCount').textContent = `${pageRows.length} instrument${pageRows.length === 1 ? '' : 's'} on this page`;
+  if (!pageRows.length) {
     $('#instResults').innerHTML = instrumentFilterActive()
-      ? `<div class="empty"><h3>No matching instruments</h3><p>Try different filters, or clear them.</p><button class="btn btn-tint" type="button" data-act="inst-clear-filters">Clear Filters</button></div>`
+      ? `<div class="empty"><h3>No matching instruments</h3><p>Try different filters, or clear them.</p><button class="btn btn-tint" type="button" data-act="fb-clear">Clear Filters</button></div>`
       : `<div class="empty"><h3>No instruments yet</h3><p>Add an instrument from one of your products.</p><a class="btn btn-primary" href="instrument.html?mode=new">${icon('plus')}Add Instrument</a></div>`;
     refreshSelection();
     return;
@@ -190,13 +133,13 @@ function refreshInstruments() {
   patchListTable($('#instResults'), `<div class="table-scroll"><table class="tbl tbl-wide">
       <thead><tr>
         <th class="check-cell"><input type="checkbox" id="instCheckAll" aria-label="Select all on this page"></th>
-        ${sortHeader('productId', 'Product Name')}${sortHeader('id', 'ID (Symbol)')}${sortHeader('description', 'Description')}${sortHeader('tradable', 'Tradable')}${sortHeader('clearingHouse', 'Clearing House')}${sortHeader('scheduled', 'Schedule')}<th>State</th>
-        ${sortHeader('open', 'Open', 'num')}${sortHeader('high', 'High', 'num')}${sortHeader('low', 'Low', 'num')}${sortHeader('close', 'Close', 'num')}${sortHeader('lastPrice', 'Last PX', 'num')}${sortHeader('settlementPrice', 'Settl-PX', 'num')}
+        <th>Product Name</th><th>ID (Symbol)</th><th>Description</th><th>Tradable</th><th>Clearing House</th><th>Schedule</th><th>State</th>
+        <th class="num">Open</th><th class="num">High</th><th class="num">Low</th><th class="num">Close</th><th class="num">Last PX</th><th class="num">Settl-PX</th>
         <th class="acts">Actions</th>
       </tr></thead>
       <tbody>${pageRows.map(instrumentRowHTML).join('')}</tbody>
     </table></div>
-    ${pagerHTML(rows.length)}`);
+    ${cursorPagerHTML(pageRows.length, hasMore)}`);
   refreshSelection();
 }
 

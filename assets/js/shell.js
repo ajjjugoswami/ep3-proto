@@ -3,7 +3,7 @@
 function renderSidebar() {
   const min = document.body.classList.contains('side-min');
   const pref = themePref();
-  const currentNav = MARKET_PAGES.includes(PAGE) ? 'instruments.html' : 'firms.html';
+  const currentNav = NAV_FOR_PAGE[PAGE] || (MARKET_PAGES.includes(PAGE) ? 'instruments.html' : 'firms.html');
   $('#sidebar').innerHTML = `
     <div class="side-head">
       <div class="brand">${logo('logo')}<div class="brand-text"><strong>Admin</strong><span>Connamara</span></div></div>

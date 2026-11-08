@@ -15,13 +15,9 @@ const ACT = {
   'nav-soon'(el) { toast(`${el.dataset.label} isn’t part of this prototype.`, { info: true }); },
   license() { showLicense(); },
   tip(el) { showTip(el); },
-  'filters-toggle'(el) {
-    const state = listCtl.state;
-    state.showFilters = state.showFilters === false;
-    $('#listFilters').hidden = !state.showFilters;
-    el.setAttribute('aria-expanded', String(state.showFilters));
-    listCtl.refresh();
-  },
+  'fb-open'(el) { openFilterPop(el); },
+  'fb-clear'() { clearListFilters(); },
+  'filter-remove'(el) { removeListFilter(el.dataset.key); },
   'page-to'(el) {
     listCtl.state.page = Number(el.dataset.p);
     listCtl.refresh();
@@ -40,19 +36,6 @@ const ACT = {
     session.clear();
     clearListStates();
     go('index.html');
-  },
-  'clear-filters'() {
-    list.q = ''; list.type = ''; list.state = ''; list.page = 0;
-    syncFirmFilters();
-    refreshList();
-    $('#q').focus();
-  },
-  'filter-remove'(el) {
-    const index = $$('[data-act="filter-remove"]').indexOf(el);
-    listCtl.removeFilter(el.dataset.key);
-    const left = $$('[data-act="filter-remove"]');
-    const next = left[Math.min(index, left.length - 1)] || $('#q') || $('[data-filter]');
-    next.focus();
   },
   sort(el) {
     const key = el.dataset.key;
@@ -83,21 +66,13 @@ const ACT = {
     const t = document.getElementById(el.dataset.target);
     if (t) t.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   },
-  async 'ent-del'(el) {
+  'ent-del'(el) {
     const { kind, id } = el.dataset;
-    const sid = el.dataset.sid || null;
-    const f = firmById(currentDetailId());
-    const e = ENTITIES[kind];
-    const rows = entityRows(kind, f, sid);
-    const index = rows.findIndex(r => r.id === id);
-    const name = e.title(rows[index]);
-    const ok = await ask({ title: `Delete ${name}?`, text: `This removes the ${e.one.toLowerCase()} from ${f.name}.`, confirm: `Delete ${e.one}`, danger: true, glyph: 'trash' });
-    if (!ok) return;
-    rows.splice(index, 1);
-    persist();
-    go(entityBase(kind, f, sid));
-    toast(`Deleted ${name}.`);
+    deleteRecord(kind, firmById(el.dataset.firm || currentDetailId()), el.dataset.sid || null, id);
   },
+  'ent-restore'(el) { restoreRecord(el.dataset.kind, firmById(el.dataset.firm), el.dataset.id); },
+  'dir-new'(el) { openFirmPicker(el.dataset.kind); },
+  'dir-row-menu'(el) { openMenu(el, directoryMenuItems(el.dataset.kind, el.dataset.firm, el.dataset.id)); },
   async 'ent-bulk'(el) {
     const { kind, state } = el.dataset;
     const f = firmById(currentDetailId());
@@ -105,7 +80,7 @@ const ACT = {
     const suspending = state === 'Suspended';
     const ok = await ask({ title: `${suspending ? 'Suspend' : 'Activate'} all ${e.plural.toLowerCase()}?`, text: `This changes every ${e.one.toLowerCase()} in ${f.name} to ${state}.`, confirm: `${suspending ? 'Suspend' : 'Activate'} All`, danger: suspending, glyph: suspending ? 'pause' : 'play' });
     if (!ok) return;
-    entityRows(kind, f).forEach(r => { r.state = state; });
+    liveRows(kind, f).forEach(r => { r.state = state; });
     persist();
     route();
     toast(`${suspending ? 'Suspended' : 'Activated'} all ${e.plural.toLowerCase()}.`);
@@ -151,6 +126,8 @@ const ACT = {
   'rec-add'(el) { openRecordSheet(el.dataset.col, null); },
   'rec-edit'(el) { openRecordSheet(el.dataset.col, Number(el.dataset.i)); },
   'rec-del'(el) { removeRecord(el.dataset.col, Number(el.dataset.i)); },
+  'dash-filter'(el) { openFilteredList(el.dataset.list, el.dataset.k, el.dataset.v); },
+  'dash-approve'() { openApproveSheet(); },
 };
 
 document.addEventListener('click', e => {
@@ -167,16 +144,19 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('contextmenu', e => {
-  const row = e.target.closest('tr[data-id], tr[data-inst]');
+  const row = e.target.closest('tr[data-id], tr[data-inst], tr[data-rec]');
   if (!row) return;
   e.preventDefault();
-  const items = row.dataset.inst ? instrumentMenuItems(instrumentById(row.dataset.inst), false) : firmMenuItems(firmById(row.dataset.id), false);
+  const { inst, rec, kind, firm, id } = row.dataset;
+  const items = inst ? instrumentMenuItems(instrumentById(inst), false)
+    : rec ? directoryMenuItems(kind, firm, rec)
+      : firmMenuItems(firmById(id), false);
   openMenu(row, items, { left: e.clientX, top: e.clientY });
 });
 
 document.addEventListener('input', e => {
   const t = e.target;
-  if (t.id === 'q') { list.q = t.value; list.page = 0; refreshList(); return; }
+  if (t.dataset.fbSearch) { onSearchInput(t); return; }
   if (t.id === 'limitFilter') {
     const needle = t.value.trim().toLowerCase();
     $$('#limitsTab tbody tr').forEach(row => { row.hidden = !!needle && !row.textContent.toLowerCase().includes(needle); });
@@ -209,9 +189,7 @@ document.addEventListener('input', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.id === 'autoReload') { storage.set('ep3.firms.prototype.autoReload', t.checked ? '1' : '0'); return; }
-  if (t.id === 'typeFilter') { list.type = t.value; list.page = 0; refreshList(); return; }
-  if (t.id === 'stateFilter') { list.state = t.value; list.page = 0; refreshList(); return; }
-  if (t.id === 'showDeleted') { list.deleted = t.checked; list.page = 0; refreshList(); return; }
+  if (t.id === 'showDeleted' || t.id === 'dirDeleted') { listCtl.state.deleted = t.checked; listCtl.state.page = 0; listCtl.refresh(); return; }
   if (t.id === 'pageSize') {
     listCtl.state.size = Number(t.value);
     listCtl.state.page = 0;
@@ -269,7 +247,7 @@ document.addEventListener('submit', async e => {
     setLoginBusy(e.target, 'Signing In…');
     await wait(500);
     storage.set(SESSION_KEY, '1');
-    go('firms.html');
+    go('dashboard.html');
   }
 });
 
@@ -278,9 +256,11 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if ($('.menu')) { closeMenu(); return; }
     if (document.body.classList.contains('side-open')) { document.body.classList.remove('side-open'); return; }
-    if (e.target.id === 'q' && list.q) { list.q = ''; e.target.value = ''; list.page = 0; refreshList(); }
+    const searchKey = e.target.dataset && e.target.dataset.fbSearch;
+    if (searchKey && e.target.value) { e.target.value = ''; e.target.classList.remove('is-pending'); setListFilter(searchKey, ''); }
   }
-  if (e.key === '/' && !typing && $('#q')) { e.preventDefault(); $('#q').focus(); }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.fbExact !== undefined) { e.preventDefault(); commitSearch(e.target); return; }
+  if (e.key === '/' && !typing && $('[data-fb-search]')) { e.preventDefault(); $('[data-fb-search]').focus(); }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's' && form && !$('#sheet').open) { e.preventDefault(); submitFirm(); }
   if (e.key === 'Enter' && !typing && e.target.matches && e.target.matches('tr[data-href]')) go(e.target.dataset.href);
 });

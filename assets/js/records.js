@@ -11,21 +11,73 @@ function renderEntityList(kind, f, sid) {
   </div>`;
 }
 
+const SOFT_DELETE = ['users', 'accounts'];
+const DIRECTORY_PAGES = { users: 'users.html', accounts: 'accounts.html' };
+
+function directoryBack(kind) {
+  const prev = session.get('pagePrev');
+  return prev && DIRECTORY_PAGES[kind] && pageFile(prev) === pageFile(DIRECTORY_PAGES[kind]) ? { href: prev, label: ENTITIES[kind].plural } : null;
+}
+
+const listLabelFor = (kind, f, sid) => (kind === 'keys' ? `${sid} API Keys` : `${f.name} · ${ENTITIES[kind].plural}`);
+
+function recordActionsHTML(kind, f, sid, rec) {
+  const e = ENTITIES[kind];
+  if (f.deleted) return '';
+  if (rec.deleted) return `<div class="head-acts"><button class="btn btn-primary" type="button" data-act="ent-restore" data-kind="${kind}" data-firm="${esc(f.id)}" data-id="${esc(rec.id)}">${icon('restore')}Restore ${esc(e.one)}</button></div>`;
+  return `<div class="head-acts">
+    ${kind === 'services' ? `<a class="btn btn-gray" href="${esc(entityHref(kind, f, sid, rec.id, 'keys'))}">${icon('key')}API Keys</a>` : ''}
+    <button class="btn btn-gray" type="button" data-act="ent-del" data-kind="${kind}" data-firm="${esc(f.id)}" data-id="${esc(rec.id)}" data-sid="${esc(sid || '')}">Delete</button>
+    <a class="btn btn-primary" href="${esc(entityHref(kind, f, sid, rec.id, 'edit'))}">${icon('edit')}Edit ${esc(e.one)}</a>
+  </div>`;
+}
+
+function afterRecordChange(kind, f, sid) {
+  if (DIRECTORY_PAGES[kind] && PAGE === pageFile(DIRECTORY_PAGES[kind])) route();
+  else go(directoryBack(kind) ? directoryBack(kind).href : entityBase(kind, f, sid));
+}
+
+async function deleteRecord(kind, f, sid, id) {
+  const e = ENTITIES[kind];
+  const rows = entityRows(kind, f, sid);
+  const index = rows.findIndex(r => r.id === id);
+  const name = e.title(rows[index]);
+  const soft = SOFT_DELETE.includes(kind);
+  const text = soft
+    ? `The ${e.one.toLowerCase()} is removed from ${f.name}. You can restore it later from Show Deleted on the ${e.plural} page.`
+    : `This removes the ${e.one.toLowerCase()} from ${f.name}.`;
+  const ok = await ask({ title: `Delete ${name}?`, text, confirm: `Delete ${e.one}`, danger: true, glyph: 'trash' });
+  if (!ok) return;
+  if (soft) rows[index].deleted = true;
+  else rows.splice(index, 1);
+  persist();
+  toast(`Deleted ${name}.`);
+  afterRecordChange(kind, f, sid);
+}
+
+async function restoreRecord(kind, f, id) {
+  const e = ENTITIES[kind];
+  const rec = entityRows(kind, f).find(r => r.id === id);
+  const name = e.title(rec);
+  const ok = await ask({ title: `Restore ${name}?`, text: `The ${e.one.toLowerCase()} returns to ${f.name} in the state it had before it was deleted.`, confirm: `Restore ${e.one}`, glyph: 'restore' });
+  if (!ok) return;
+  rec.deleted = false;
+  persist();
+  route();
+  toast(`Restored ${name}.`);
+}
+
 function renderEntityView(kind, f, sid, rec) {
   const e = ENTITIES[kind];
   const name = e.title(rec);
   document.title = `${name} · EP3 Admin`;
   const fields = e.fields(f, sid);
-  const backLabel = kind === 'keys' ? `${sid} API Keys` : `${f.name} · ${e.plural}`;
+  const back = directoryBack(kind) || { href: entityBase(kind, f, sid), label: listLabelFor(kind, f, sid) };
   $('#view').innerHTML = `<div class="page">
-    <a class="crumb" href="${esc(entityBase(kind, f, sid))}">${icon('back')}${esc(backLabel)}</a>
+    <a class="crumb" href="${esc(back.href)}">${icon('back')}${esc(back.label)}</a>
     <header class="page-head">
-      <div class="firm-title"><h1 class="large-title" tabindex="-1">${esc(name)}</h1>${rec.state ? statusPill(rec.state) : ''}</div>
-      ${f.deleted ? '' : `<div class="head-acts">
-        ${kind === 'services' ? `<a class="btn btn-gray" href="${esc(entityHref(kind, f, sid, rec.id, 'keys'))}">${icon('key')}API Keys</a>` : ''}
-        <button class="btn btn-gray" type="button" data-act="ent-del" data-kind="${kind}" data-id="${esc(rec.id)}" data-sid="${esc(sid || '')}">Delete</button>
-        <a class="btn btn-primary" href="${esc(entityHref(kind, f, sid, rec.id, 'edit'))}">${icon('edit')}Edit ${esc(e.one)}</a>
-      </div>`}
+      <div class="firm-title"><h1 class="large-title" tabindex="-1">${esc(name)}</h1>${rec.deleted ? '<span class="pill pill-deleted">Deleted</span>' : rec.state ? statusPill(rec.state) : ''}</div>
+      ${recordActionsHTML(kind, f, sid, rec)}
     </header>
     <div class="card">${fields.map(x => readRow(x, rec)).join('')}${kind === 'keys' ? readRow({ k: 'jti', label: 'Token ID', mono: true }, rec) : ''}</div>
   </div>`;
@@ -39,10 +91,10 @@ function startEntityForm(kind, f, sid, rec) {
     mode: rec ? 'edit' : 'create', draft: base, original: clone(base), errors: {}, idTouched: true, saving: false,
     entity: { kind, firmId: f.id, sid, fields, one: e.one },
   };
-  const listLabel = kind === 'keys' ? `${sid} API Keys` : `${f.name} · ${e.plural}`;
-  const back = rec
+  const listLabel = listLabelFor(kind, f, sid);
+  const back = directoryBack(kind) || (rec
     ? editBack(entityHref(kind, f, sid, rec.id), e.title(rec), entityBase(kind, f, sid), listLabel)
-    : { href: entityBase(kind, f, sid), label: listLabel };
+    : { href: entityBase(kind, f, sid), label: listLabel });
   const backHref = back.href;
   const backLabel = back.label;
   document.title = `${rec ? `Edit ${e.title(rec)}` : `New ${e.one}`} · EP3 Admin`;

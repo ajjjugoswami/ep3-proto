@@ -23,13 +23,22 @@ function renderRecordPage(kind, f, sid) {
     renderNotFound(id);
     return;
   }
-  if (mode === 'edit') startEntityForm(kind, f, sid, rec);
+  if (mode === 'edit' && rec.deleted) location.replace(entityHref(kind, f, sid, rec.id));
+  else if (mode === 'edit') startEntityForm(kind, f, sid, rec);
   else renderEntityView(kind, f, sid, rec);
 }
 
 function renderPage() {
   if (MARKET_PAGES.includes(PAGE)) {
     renderMarketPage();
+    return;
+  }
+  if (PAGE === 'dashboard') {
+    renderDashboard();
+    return;
+  }
+  if (DIRECTORY[PAGE]) {
+    renderDirectory(PAGE);
     return;
   }
   if (PAGE === 'firms') {
@@ -67,10 +76,11 @@ function route() {
   closeMenu(false);
   closeSelect(false);
   closeDatePicker(false);
+  closeFilterPop(false);
   document.body.classList.remove('side-open');
 
   if (PAGE === 'login') {
-    if (signedIn) location.replace('firms.html');
+    if (signedIn) location.replace('dashboard.html');
     else if (String(param('register')).toLowerCase() === 'true') renderRegister();
     else renderLogin();
     return;

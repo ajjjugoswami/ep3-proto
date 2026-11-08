@@ -6,6 +6,7 @@ const entityRows = (kind, f, sid) => {
   const svc = serviceOf(f, sid);
   return svc ? (svc.keys || (svc.keys = [])) : [];
 };
+const liveRows = (kind, f, sid) => entityRows(kind, f, sid).filter(r => !r.deleted);
 const entityBase = (kind, f, sid) => (kind === 'keys'
   ? `api-keys.html?firm=${encodeURIComponent(f.id)}&service=${encodeURIComponent(sid)}`
   : hrefFor(f.id, kind));
@@ -27,14 +28,16 @@ function entityCell(value, opts) {
   return opts.mono ? `<span class="mono firm-id">${esc(value)}</span>` : esc(value);
 }
 
+const pillClass = value => `pill-${String(value).toLowerCase().replace(/\s+/g, '-')}`;
+
 const statusPill = value => {
   const label = value || 'Active';
-  return `<span class="pill pill-${esc(String(label).toLowerCase().replace(/\s+/g, '-'))}">${esc(label)}</span>`;
+  return `<span class="pill ${esc(pillClass(label))}">${esc(label)}</span>`;
 };
 
 function entityTableHTML(kind, f, sid, editable) {
   const e = ENTITIES[kind];
-  const rows = entityRows(kind, f, sid);
+  const rows = liveRows(kind, f, sid);
   if (!rows.length) return `<div class="card empty small"><p>This ${kind === 'keys' ? 'service' : 'firm'} has no ${esc(e.plural.toLowerCase())} yet.</p></div>`;
   const table = `<table class="tbl ${e.wide ? 'tbl-wide' : ''}">
     <thead><tr>
@@ -47,7 +50,7 @@ function entityTableHTML(kind, f, sid, editable) {
       ${kind === 'services' ? `<td><a class="btn btn-tint btn-small" href="${esc(entityHref(kind, f, sid, r.id, 'keys'))}">${icon('key')}${(r.keys || []).length}</a></td>` : ''}
       <td class="acts">${editable ? `
         <a class="icon-btn" href="${esc(entityHref(kind, f, sid, r.id, 'edit'))}" aria-label="Edit ${esc(e.title(r))}" title="Edit">${icon('edit')}</a>
-        <button class="icon-btn danger" type="button" data-act="ent-del" data-kind="${kind}" data-id="${esc(r.id)}" data-sid="${esc(sid || '')}" aria-label="Delete ${esc(e.title(r))}" title="Delete">${icon('trash')}</button>` : ''}
+        <button class="icon-btn danger" type="button" data-act="ent-del" data-kind="${kind}" data-firm="${esc(f.id)}" data-id="${esc(r.id)}" data-sid="${esc(sid || '')}" aria-label="Delete ${esc(e.title(r))}" title="Delete">${icon('trash')}</button>` : ''}
       </td>
     </tr>`).join('')}</tbody>
   </table>`;
@@ -56,7 +59,7 @@ function entityTableHTML(kind, f, sid, editable) {
 
 function entityToolbarHTML(kind, f, sid, editable) {
   const e = ENTITIES[kind];
-  const rows = entityRows(kind, f, sid);
+  const rows = liveRows(kind, f, sid);
   return `<div class="tab-toolbar head-end">
     ${editable ? `<div class="head-acts">
       ${e.bulk ? `<button class="btn btn-gray" type="button" data-act="ent-bulk" data-kind="${kind}" data-state="Suspended" ${rows.length ? '' : 'disabled'}>Suspend All</button>

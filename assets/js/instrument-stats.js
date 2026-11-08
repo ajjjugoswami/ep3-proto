@@ -100,14 +100,17 @@ function historyRows(inst) {
   const seed = hashText(inst.id);
   const now = new Date();
   now.setMinutes(0, 0, 0);
+  let walk = 1;
   return Array.from({ length: 60 }, (_, n) => {
     const at = new Date(now.getTime() - n * 3600000);
-    const swing = n === 0 ? 1 : 1 + (((seed + n * 37) % 41) - 20) / 2000;
+    if (n) walk += ((hashText(`${inst.id}:${n}`) % 97) - 48) / 16000;
+    const swing = walk;
     const value = factor => (base * swing * factor).toFixed(decimals);
     const stamp = isoDateTime(at);
+    const shares = 20 + ((seed + n * 53) % 71);
     return {
       transactionTime: stamp, openPx: value(0.996), openSetTime: stamp, indicativeOpenPx: value(0.995), indicativeOpenSetTime: stamp, highPx: value(1.012), highSetTime: stamp, lowPx: value(0.988), lowSetTime: stamp,
-      closePx: value(1.001), closeSetTime: stamp, lastTradePx: value(1), lastTradeSetTime: stamp, lastTradeQty: String(1 + ((seed + n) % 25)), notionalTraded: (base * swing * (40 + n)).toFixed(2), notionalSetTime: stamp, sharesTraded: String(40 + n),
+      closePx: value(1.001), closeSetTime: stamp, lastTradePx: value(1), lastTradeSetTime: stamp, lastTradeQty: String(1 + ((seed + n) % 25)), notionalTraded: (base * swing * shares).toFixed(2), notionalSetTime: stamp, sharesTraded: String(shares),
       settlementPx: value(1.002), settlementSetTime: stamp, settlementPreliminaryFlag: false, settlementPriceCalculationMethod: 'VWAP TIER 1', settlementPriceCalculationText: '', openInterest: String(3000 + ((seed + n * 11) % 500)), openInterestSetTime: stamp,
       tradingReferencePrice: value(1.002), tradingReferencePriceSetTime: stamp, markPrice: value(1.0005), markPriceSetTime: stamp,
     };
@@ -145,22 +148,19 @@ function refreshHistory(inst) {
   saveListState('historyList', historyList);
   const from = new Date(historyList.from);
   const to = new Date(historyList.to);
-  const rows = historyRows(inst).filter(r => new Date(r.transactionTime) >= from && new Date(r.transactionTime) <= to);
+  const { rows, hasMore } = cursorPage(historyRows(inst).filter(r => new Date(r.transactionTime) >= from && new Date(r.transactionTime) <= to), historyList);
   if (!rows.length) {
     $('#historyResults').innerHTML = '<div class="empty"><h3>No market stats</h3><p>Nothing was recorded in this time range.</p></div>';
     return;
   }
-  const pages = Math.max(1, Math.ceil(rows.length / historyList.size));
-  historyList.page = Math.min(historyList.page, pages - 1);
-  const start = historyList.page * historyList.size;
   $('#historyResults').innerHTML = `<div class="table-scroll"><table class="tbl tbl-wide">
       <thead><tr>${HISTORY_COLUMNS.map(([label], i) => `<th class="${i ? 'num' : ''}">${esc(label)}</th>`).join('')}<th class="acts"><span class="sr">Actions</span></th></tr></thead>
-      <tbody>${rows.slice(start, start + historyList.size).map(r => `<tr>
+      <tbody>${rows.map(r => `<tr>
         ${HISTORY_COLUMNS.map(([, key], i) => `<td class="${i ? 'num' : ''}">${esc(i ? r[key] : showDateTime(r[key]))}</td>`).join('')}
         <td class="acts"><button class="icon-btn" type="button" data-act="history-view" data-time="${esc(r.transactionTime)}" aria-label="View details" title="View">${icon('eye')}</button></td>
       </tr>`).join('')}</tbody>
     </table></div>
-    ${pagerHTML(rows.length)}`;
+    ${cursorPagerHTML(rows.length, hasMore)}`;
 }
 
 function openHistoryDetail(inst, time) {

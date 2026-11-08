@@ -169,7 +169,7 @@ const ENTITIES = {
       { k: 'riskSystem', label: 'Risk System', kind: 'select', options: ['Default'], def: 'Default', tip: TIPS.riskSystem },
       { k: 'riskProfile', label: 'Risk Profile', tip: TIPS.riskProfile },
       { k: 'priorityWeight', label: 'Account Priority Weight', inputType: 'number', min: 0 },
-      { k: 'collateralAccount', label: 'Collateral Account', kind: 'select', options: (f.accounts || []).map(a => a.id), blank: 'Not set' },
+      { k: 'collateralAccount', label: 'Collateral Account', kind: 'select', options: liveRows('accounts', f).map(a => a.id), blank: 'Not set' },
       { k: 'collateralReturnEnabled', label: 'Collateral Return Enabled', kind: 'toggle' },
       { k: 'orderSizeLow', label: 'Order Size Lower Limit', inputType: 'number', min: 0 },
       { k: 'orderSizeLowSet', label: 'Lower Limit Set', kind: 'toggle' },
@@ -201,11 +201,13 @@ const ENTITIES = {
 };
 
 const NAV = [
-  { label: 'Directory', items: [['Firms', 'building', 'firms.html'], ['Users', 'users'], ['Accounts', 'card'], ['Groups', 'group']] },
+  { label: 'Overview', items: [['Dashboard', 'dashboard', 'dashboard.html']] },
+  { label: 'Directory', items: [['Firms', 'building', 'firms.html'], ['Users', 'users', 'users.html'], ['Accounts', 'card', 'accounts.html'], ['Groups', 'group']] },
   { label: 'Markets', items: [['Instruments', 'list', 'instruments.html'], ['Time & Sales', 'calendar'], ['Order Search', 'search'], ['RFQ Search', 'quote']] },
   { label: 'Operations', items: [['Admin Requests', 'check'], ['Jobs', 'terminal'], ['Alerts', 'bell']] },
   { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal', false, 'license']] },
 ];
+const NAV_FOR_PAGE = { dashboard: 'dashboard.html', users: 'users.html', accounts: 'accounts.html' };
 const MARKET_PAGES = ['instruments', 'instrument', 'instrument-stats', 'instrument-history', 'books', 'products', 'product', 'calendars'];
 const APP_INFO = {
   appVersion: 'v0.5.6-7b97fe0',

@@ -105,7 +105,7 @@ function openApproveSheet() {
   openWideSheet({
     title: 'Approve Settlement Prices',
     primary: 'Approve Prices',
-    onClose: () => refreshInstruments(),
+    onClose: () => (PAGE === 'instruments' ? refreshInstruments() : route()),
     body: () => {
       const pending = rows.filter(r => r.status === 'Pending');
       const allOn = pending.length > 0 && pending.every(r => r.selected);
