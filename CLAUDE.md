@@ -83,7 +83,6 @@ On `firm.html`, `tab` is one of `users`, `accounts`, `position-limits`, `associa
 | `js/market-events.js` | Adds the instruments module's actions to `ACT`, and its listeners |
 | `js/router.js` | Picks what to render for the current page, then boots the app |
 | `samples/settlement-prices.csv` | Sample file for Import Settlement Prices |
-| `img/ep3-logo.png` | The real EP3 logo, `ep3-4-color-icon.png` from ep3-admin-ui. Render it with `brandLogo(cls, alt)` from `core.js` |
 | `img/login-dashboard.png` | Laptop illustration on the log in and register pages |
 
 ## How the code works
@@ -212,7 +211,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Account money:** balances, withdrawals, credits and ledgers are generated from the account ID the first time they're shown. Positions As Of shows the BOD position as the open position. Changes write ledger entries, but nothing is re-priced.
 - **Account state** saves with the rest of the form after the confirm. In the real app, changing the state applies at once and discards other edits.
 - **Version and license values** are samples in `APP_INFO`. In the real app they come from `REACT_APP_VERSION` and the license API.
-- **Logo:** the log in and register pages use the real logo (`img/ep3-logo.png`). The sidebar and phone top bar still use the vector redraw in `sprite.js`.
+- **Logo:** the EP3 wordmark is a vector drawing in `sprite.js` (`#ep3-logo`), rendered with `logo(cls)`. The sidebar, phone top bar and log in and register pages all use it.
 - **Calculate Dates** runs in the browser. It skips weekends but ignores holiday calendars and day conventions, where the real app calls a date service.
 - **Market data, history and books** are generated samples. Refresh Market Data nudges last prices, and books don't refresh on their own.
 - **Instrument state** from the schedule uses the browser's clock, not `MARKET_TZ`. A scheduled state change applies the next time a page loads after its time.

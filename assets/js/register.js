@@ -90,7 +90,7 @@ function renderRegister() {
   document.body.classList.add('auth');
   $('#view').innerHTML = authPageHTML(`
     <form class="login-form" id="registerForm" novalidate>
-      ${brandLogo('login-logo')}
+      ${logo('login-logo')}
       <h2 tabindex="-1">Create your account</h2>
       <p>Paste your registration token and choose a password</p>
       ${loginField('Token', `
