@@ -75,7 +75,16 @@ const loginField = (label, control) => `<label class="login-field"><span>${esc(l
 
 const iconInput = (ic, input) => `<span class="login-input has-icon">${icon(ic)}${input}</span>`;
 
-const authPageHTML = form => `<div class="login">${form}</div>`;
+const authPageHTML = form => `
+  <div class="login">
+    <aside class="login-aside">
+      <div class="login-brand">${brandLogo('login-brand-logo', '')}<strong>EP3</strong><span>Admin Portal</span></div>
+      <h1>Manage your trading platform with complete control</h1>
+      <p>Oversee firms, users, accounts, instruments and market activity, all in one place.</p>
+      <img class="login-art" src="assets/img/login-dashboard.png" alt="" width="640" height="495">
+    </aside>
+    <div class="login-pane">${form}</div>
+  </div>`;
 
 const passwordInput = (name, autocomplete, placeholder) => `
   <span class="login-input has-icon">
@@ -116,9 +125,9 @@ function renderLogin() {
   document.body.classList.add('auth');
   $('#view').innerHTML = authPageHTML(`
     <form class="login-form" id="loginForm" novalidate>
-      ${logo('login-logo')}
-      <h2 tabindex="-1">Welcome back</h2>
-      <p>Sign in to the EP3 admin console</p>
+      ${brandLogo('login-logo')}
+      <h2 tabindex="-1">Sign in to Admin Portal</h2>
+      <p>Access and manage your trading platform</p>
       ${loginField('Username', iconInput('user', `<input class="field" name="username" placeholder="Enter your username" autocomplete="username" autocapitalize="off" spellcheck="false">`))}
       ${loginField('Password', passwordInput('password', 'current-password', 'Enter your password'))}
       <div class="row-err" id="loginErr" role="alert" hidden></div>

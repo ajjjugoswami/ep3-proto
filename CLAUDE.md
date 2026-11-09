@@ -83,6 +83,8 @@ On `firm.html`, `tab` is one of `users`, `accounts`, `position-limits`, `associa
 | `js/market-events.js` | Adds the instruments module's actions to `ACT`, and its listeners |
 | `js/router.js` | Picks what to render for the current page, then boots the app |
 | `samples/settlement-prices.csv` | Sample file for Import Settlement Prices |
+| `img/ep3-logo.png` | The real EP3 logo, `ep3-4-color-icon.png` from ep3-admin-ui. Render it with `brandLogo(cls, alt)` from `core.js` |
+| `img/login-dashboard.png` | Laptop illustration on the log in and register pages |
 
 ## How the code works
 
@@ -170,7 +172,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark uses navy blue surfaces (shell `#0A1222`, panel `#0F192C`, cards `#142036`) with blue-tinted lines and greys and white text, not neutral black. Chart marks use `--chart-1`, a lighter blue in dark mode, so they stay visible on the blue surfaces. Light uses a white sidebar and white panel, separated by the panel's border. In both themes, sidebar icons are blue and the selected one is green.
 - **App shell:** flat sidebar, with the content in a large rounded panel and thin scrollbars inset from the corners.
 - **Sidebar:** no search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
-- **Log in and Register:** a white card centred on a blue gradient page, with no illustration or side panel. The user doesn't want Remember me or Forgot password.
+- **Log in and Register:** a split page from the user's reference design, built by `authPageHTML` in `shell.js`. On the left is a navy-to-blue panel with the EP3 logo, "Admin Portal", a headline and the laptop illustration. On the right is the form on the page background. Up to 960px the panel becomes a short banner above the form, without the illustration. The user doesn't want Remember me or Forgot password.
 - **Change State:** opens as a dialog over the current page, for one instrument or a selection, not a separate page. Save applies straight away with no second confirmation. EOD actions and resolution are in the same dialog and do ask first.
 - **Filter bar:** the user rejected the labelled filter grid as looking like the old admin UI. The firm, instrument, user and account lists use one filter row (`filterBarHTML` in `filter-bar.js`): a search box, then a dashed button per filter that opens a dropdown, a text box or the date picker. A set filter shows its value in a tinted button with an X, and a Clear all link appears. Filters apply live, and there is no Filters toggle, chips row or Reset button. Show Deleted is a toggle at the right end of the row. Instrument filters for interest rate swaps only appear when Type is Interest Rate Swap.
 - **Firm list:** Firm Type and Firm State filters that apply live, like the real UI. Name and Firm ID are separate columns, with no icons in the name cells. Row actions are View and Edit icons and a More menu, the same as the instrument list.
@@ -210,7 +212,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Account money:** balances, withdrawals, credits and ledgers are generated from the account ID the first time they're shown. Positions As Of shows the BOD position as the open position. Changes write ledger entries, but nothing is re-priced.
 - **Account state** saves with the rest of the form after the confirm. In the real app, changing the state applies at once and discards other edits.
 - **Version and license values** are samples in `APP_INFO`. In the real app they come from `REACT_APP_VERSION` and the license API.
-- **Logo** is a vector redraw from a screenshot, because the real file is not in either repo. Replace it in `sprite.js` when available.
+- **Logo:** the log in and register pages use the real logo (`img/ep3-logo.png`). The sidebar and phone top bar still use the vector redraw in `sprite.js`.
 - **Calculate Dates** runs in the browser. It skips weekends but ignores holiday calendars and day conventions, where the real app calls a date service.
 - **Market data, history and books** are generated samples. Refresh Market Data nudges last prices, and books don't refresh on their own.
 - **Instrument state** from the schedule uses the browser's clock, not `MARKET_TZ`. A scheduled state change applies the next time a page loads after its time.

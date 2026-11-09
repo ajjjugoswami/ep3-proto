@@ -88,6 +88,7 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const icon = n => `<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const logo = cls => `<svg class="${cls}" role="img" aria-label="EP3"><use href="#ep3-logo"/></svg>`;
+const brandLogo = (cls, alt = 'EP3') => `<img class="${cls}" src="assets/img/ep3-logo.png" alt="${alt}" width="272" height="253">`;
 const firmById = id => firms.find(f => f.id === id);
 const hrefFor = (id, tail) => {
   const firmId = encodeURIComponent(id);
