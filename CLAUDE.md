@@ -78,7 +78,8 @@ On `firm.html`, `tab` is one of `users`, `accounts`, `position-limits`, `associa
 | `js/calendars.js` | Holiday calendars and events |
 | `js/charts.js` | Inline SVG charts: column chart, sparkline, segmented bar, `chartSlotHTML` and `paintCharts` |
 | `js/directory.js` | Users and Accounts list pages (`DIRECTORY`), filters, row menu, firm picker for new records |
-| `js/dashboard.js` | Dashboard tiles, charts and cards, `openFilteredList` |
+| `js/dashboard-data.js` | The dashboard's data, shaped like the server calls a production dashboard would make: `getDashboardStats`, `getHourlyNotional`, `listTopInstruments`, `listUpcomingHolidays`, and `DASH_SNAPSHOT`, the production-size sample. Loads before `dashboard.js` |
+| `js/dashboard.js` | Dashboard tiles, charts and cards, `metricText`, `openFilteredList`. Only draws what `dashboard-data.js` returns |
 | `js/events.js` | Actions and document event listeners |
 | `js/market-events.js` | Adds the instruments module's actions to `ACT`, and its listeners |
 | `js/router.js` | Picks what to render for the current page, then boots the app |
@@ -115,7 +116,10 @@ Production EP3 holds millions of users, accounts and instruments, so every list,
 - **Firms and Products** come back in full from `ListFirms` and `ListProducts`, so those lists keep `pagerHTML` with page numbers and totals, header sorting and live partial search.
 - **Long option lists:** filter dropdowns render at most 50 options with a search box, and say how many more match. Themed dropdowns with 13 or more options get a search box. Never put an unbounded list in the DOM.
 - **Exact text filters** (`exact: true`, such as Collateral Account) apply on Enter or Apply, not on each keystroke.
-- **Dashboard counts** for users and accounts (totals, states, roles) need a server-side stats endpoint. Never compute them by paging through full lists. The prototype computes them from sample data.
+- **Dashboard data** goes through `dashboard-data.js`, never through the list pages' data. Each function stands for one server call and returns only totals, counts by state, role or type, a top-N list or hourly totals.
+  - Users, accounts, instruments and market activity come from `DASH_SNAPSHOT`, a production-size sample (2.41M users, 3.18M accounts, 184K listed instruments, $41.8B notional a day). In production they need a stats endpoint, a top instruments endpoint and an hourly notional endpoint.
+  - Firms, products and holidays are counted from the sample data, because `ListFirms`, `ListProducts` and `listHolidayCalendars` return everything.
+  - Show counts with `metricText`: full digits under 10,000, then a short form such as 18.2K or 2.41M, with the exact number in the tooltip. Lists on the dashboard are capped (`DASH_TOP_LIMIT`, `DASH_HOLIDAY_LIMIT`). The page shows when the stats were last updated.
 
 ## Rules copied from the real admin UI
 
@@ -168,9 +172,15 @@ Instruments module, from `pages/Instruments.js`, `InstrumentForm.js` and `Produc
 Keep these unless told otherwise. The user wants a simple admin tool, not a fancy one.
 
 - **Font:** Geist and Geist Mono, not Montserrat. Google Fonts is loaded from a CDN.
-- **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark uses navy blue surfaces (shell `#0A1222`, panel `#0F192C`, cards `#142036`) with blue-tinted lines and greys and white text, not neutral black. Chart marks use `--chart-1`, a lighter blue in dark mode, so they stay visible on the blue surfaces. Light uses a white sidebar and white panel, separated by the panel's border.
+- **Theme:** Light and Dark only, in the sidebar, with no System option. Light is the default. Dark follows the user's dark dashboard reference: deep navy, not neutral black.
+  - Surfaces: sidebar `#061021`, content panel `#040914`, cards `#0B172D`. Lines are `#12213F` and `#1E3157`.
+  - Text: white titles, with greys `#A3AFC0` and `#75839A`.
+  - Blues: the selected nav item is solid `#1464DB` with white text, the primary blue is `#1875F0`, and links are `#4C93F2`.
+  - Status colours are bright on soft tints: green `#12C47A`, amber `#F59E0B`, red `#E5484D`, info blue `#1F96F0`.
+  - Chart columns are a vertical gradient from `--chart-1` to `--chart-2` (`#1F96F0` to `#1167CD`). In light mode both are `#1D4ED8`, so the columns stay flat.
+  - Price changes on the dashboard are green when up and red when down, in both themes. Light uses a white sidebar and white panel, separated by the panel's border.
 - **App shell:** flat sidebar, with the content in a large rounded panel and thin scrollbars inset from the corners.
-- **Sidebar:** follows the user's Figma. The logo with "Admin Console", and a bordered collapse button whose icon flips between close and open. Group labels are small uppercase grey text. Icons are grey line icons, with the label in dark grey. The selected item has a light blue background, with its icon and label in the accent blue (`--nav-selected-bg`, `--nav-selected-ink`). Nav icons live in `sprite.js` in one line style, 24px grid and round caps. No search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
+- **Sidebar:** follows the user's Figma. The logo with "Admin Console", and a bordered collapse button whose icon flips between close and open. Group labels are small uppercase grey text. Icons are grey line icons, with the label in dark grey. The selected item uses `--nav-selected-bg` and `--nav-selected-ink`: in light mode, a light blue background with the icon and label in the accent blue; in dark mode, solid blue with white text. Nav icons live in `sprite.js` in one line style, 24px grid and round caps. No search and no user dropdown. Appearance sits in a card, Log Off is a red tinted left-aligned button below it, and the left-aligned environment and version are under that. The License row shows the expiry.
 - **Log in and Register:** a split page from the user's reference design, built by `authPageHTML` in `shell.js`. On the left is a navy-to-blue panel with the EP3 logo, "Admin Portal", a headline and the laptop illustration. On the right is the form on the page background. Up to 960px the panel becomes a short banner above the form, without the illustration. The user doesn't want Remember me or Forgot password.
 - **Change State:** opens as a dialog over the current page, for one instrument or a selection, not a separate page. Save applies straight away with no second confirmation. EOD actions and resolution are in the same dialog and do ask first.
 - **Filter bar:** follows the user's Figma. The user rejected the labelled filter grid as looking like the old admin UI. The firm, instrument, user, account and ledger lists use `filterBarHTML` in `filter-bar.js`:
@@ -225,7 +235,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 - **Export Data** writes the list's columns. In the real app the server builds the file.
 - **Product Question** is a plain text field, where the real UI suggests earlier questions.
 - **Register:** nothing is saved, and any username and password still logs in. A token registers if it is a JWT with a `sub`, and anything else shows "Unable to register user." **Use a sample token** is only in the prototype. The password check runs in the browser with made-up rules, where the real app calls `checkPassword`.
-- **Dashboard** doesn't exist in the real app, and logging in opens it where the real app opens Firms. Its numbers are computed from the sample data, and the hourly notional and price trends come from `historyRows`. In production, the user and account counts, users by role and the activity figures need a stats endpoint.
+- **Dashboard** doesn't exist in the real app, and logging in opens it where the real app opens Firms. Its user, account, instrument and activity figures are a production-size sample (see *Built for millions of records*), so they don't match the sample rows you see after clicking through. The hourly notional chart and the most active instruments take their shape from `historyRows`, scaled up to `DASH_SNAPSHOT`. Clicking a top instrument opens a stats page with the smaller sample figures.
 - **Add New User or Account** from the lists asks for the firm in a dialog first, then opens the firm's record form. The real form has a Firm dropdown.
 - **Reset:** clear this site's browser data to restore the sample firms and instruments.
 

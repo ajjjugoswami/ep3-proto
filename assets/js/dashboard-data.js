@@ -15,6 +15,7 @@ const DASH_SNAPSHOT = {
     settlementToApprove: 1284,
   },
   notional24h: 41.8e9,
+  topShare: 0.3,
 };
 
 const DASH_TOP_LIMIT = 6;
@@ -58,12 +59,17 @@ function getHourlyNotional() {
 }
 
 function listTopInstruments(limit = DASH_TOP_LIMIT) {
-  return sortRows(listedInstruments().filter(i => notionalOf(i) > 0), notionalOf, -1).slice(0, limit).map(i => ({
-    inst: i,
-    notional: notionalOf(i),
-    volume: Number(i.stats.sharesTraded) || 0,
-    trend: historyRows(i).slice(0, 24).reverse().map(row => Number(row.lastTradePx)),
-  }));
+  const day = listedInstruments().filter(i => notionalOf(i) > 0).map(i => {
+    const rows = historyRows(i).slice(0, 24);
+    return {
+      inst: i,
+      notional: sumOf(rows.map(r => Number(r.notionalTraded))),
+      volume: sumOf(rows.map(r => Number(r.sharesTraded))),
+      trend: rows.reverse().map(r => Number(r.lastTradePx)),
+    };
+  });
+  const scale = (DASH_SNAPSHOT.notional24h * DASH_SNAPSHOT.topShare) / (sumOf(day.map(d => d.notional)) || 1);
+  return sortRows(day, d => d.notional, -1).slice(0, limit).map(d => ({ ...d, notional: d.notional * scale, volume: Math.round(d.volume * scale) }));
 }
 
 function listUpcomingHolidays(limit = DASH_HOLIDAY_LIMIT) {

@@ -80,19 +80,18 @@ function changeHTML(values) {
   if (values.length < 2 || !values[0]) return '<span class="row-value unset">—</span>';
   const pct = ((values[values.length - 1] - values[0]) / values[0]) * 100;
   const sign = pct > 0 ? '+' : '';
-  return `<span class="dash-change">${icon(pct >= 0 ? 'up' : 'down')}${sign}${pct.toFixed(2)}%</span>`;
+  return `<span class="dash-change ${pct >= 0 ? 'is-up' : 'is-down'}">${icon(pct >= 0 ? 'up' : 'down')}${sign}${pct.toFixed(2)}%</span>`;
 }
 
 function activeInstrumentsHTML() {
   const rows = listTopInstruments();
   if (!rows.length) return dashEmptyHTML('No trading activity yet.');
   return `<div class="table-scroll"><table class="tbl">
-    <thead><tr><th>Instrument</th><th>State</th><th class="num">Last PX</th><th class="num">24h</th><th class="hide-compact">Trend</th><th class="num">Volume</th><th class="num">Notional</th></tr></thead>
+    <thead><tr><th>Instrument</th><th>State</th><th class="num">Last PX · 24h</th><th class="hide-compact">Trend</th><th class="num">Volume</th><th class="num">Notional</th></tr></thead>
     <tbody>${rows.map(({ inst: i, notional, volume, trend }) => `<tr data-href="${esc(instHref(i.id))}">
         <td><a class="firm-name" href="${esc(instHref(i.id))}">${esc(i.id)}</a><span class="firm-id">${esc(i.productId)}</span></td>
         <td>${statusPill(i.state)}</td>
-        <td class="num">${esc(px(i, i.stats.lastPrice))}</td>
-        <td class="num">${changeHTML(trend)}</td>
+        <td class="num dash-px">${esc(px(i, i.stats.lastPrice))}${changeHTML(trend)}</td>
         <td class="hide-compact">${sparklineSVG(trend)}</td>
         <td class="num">${metricHTML(volume)}</td>
         <td class="num">${esc(compactNumber(notional))}</td>

@@ -51,6 +51,7 @@ function columnChartSVG(points, { width, height = 220, format, label, labelEvery
   const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step);
   const every = Math.max(labelEvery, Math.ceil(42 / band));
   return `<svg class="chart-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="group" aria-label="${esc(label)}">
+    <defs><linearGradient id="chart-col-fill" x1="0" y1="0" x2="0" y2="1"><stop class="chart-stop-1" offset="0"/><stop class="chart-stop-2" offset="1"/></linearGradient></defs>
     ${ticks.map(v => `<line class="${v ? 'chart-grid' : 'chart-axis'}" x1="${pad.left}" x2="${width - pad.right}" y1="${yOf(v)}" y2="${yOf(v)}"/>
       <text class="chart-tick" x="${pad.left - 8}" y="${yOf(v)}" dy="0.32em" text-anchor="end">${esc(format(v))}</text>`).join('')}
     ${points.map((p, i) => {
