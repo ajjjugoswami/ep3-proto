@@ -6,11 +6,12 @@ const firm = (name, type, extra = {}) => ({
   altNames: [], personnel: [], aliases: [], users: [], accounts: [], positions: [], limits: [], assoc: {}, services: [],
   ...extra,
 });
-const user = (id, displayName, role, state = 'Active') => ({ id, displayName, role, state, groupName: '' });
+const user = (id, displayName, role, state = 'Active', extra = {}) => ({ id, displayName, role, state, groupName: '', aliases: [], accounts: [], ...extra });
 const account = (id, accountType, clearingMember, extra = {}) => ({
   id, displayName: id, accountType, state: 'Active', clearingMember, clearingHouse: 'Connamara Clearing House',
-  riskSystem: 'Default', riskProfile: '', collateralReturnEnabled: false, collateralAccount: '', priorityWeight: '',
-  orderSizeLow: '', orderSizeLowSet: false, orderSizeHigh: '', orderSizeHighSet: false, ...extra,
+  riskSystem: 'Default', riskProfile: 'Exchange Default', collateralReturnEnabled: false, collateralAccount: '', priorityWeight: '',
+  orderSizeLow: '', orderSizeLowSet: false, orderSizeHigh: '', orderSizeHighSet: false, properties: [], mqpInterval: '', mqpTradedQuantity: '',
+  clearingAccount: '', positionAccount: '', beneficialOwners: [], aliases: [], bankDetails: [], commissions: [], limits: [], associated: [], ...extra,
 });
 const service = (id, description, role, keys = []) => ({ id, description, role, state: 'Active', keys });
 const baseFirms = () => [
@@ -32,7 +33,7 @@ const baseFirms = () => [
     organizationType: 'Limited Liability Company', legalName: 'Connamara Clearing LLC', businessContactName: 'Sam Patel', email: 'members@example.com',
     mainAddress1: '200 W Jackson Blvd', mainAddressCity: 'Chicago', mainAddressState: 'IL', mainAddressPostalCode: '60606', mainAddressCountryCode: 'US',
     users: [user('sam.patel', 'Sam Patel', 'Supervisor Onboarding Admin')],
-    accounts: [account('CC-Omnibus', 'Customer', 'Connamara Clearing', { riskProfile: 'Standard' })],
+    accounts: [account('CC-Omnibus', 'Customer', 'Connamara Clearing', { riskProfile: 'Exchange Scoped', properties: ['Omnibus'] })],
     assoc: { participants: ['Connamara-Trading', 'A1-Trading'], clearingHouses: ['Connamara-Clearing-House'] },
     services: [service('drop-copy', 'Post-trade drop copy feed', 'Supervisor Read Only Admin')],
   }),
@@ -45,10 +46,26 @@ const baseFirms = () => [
     altNames: [{ name: 'Connamara Technologies Trading' }],
     personnel: [{ name: 'Alex Morgan', email: 'alex.morgan@example.com', phoneNumber: '+1 312 555 0187', role: 'CEO', addressCity: 'Chicago', addressState: 'IL' }, { name: 'Riley Chen', email: 'riley.chen@example.com', phoneNumber: '+1 312 555 0133', role: 'CCO' }],
     aliases: [{ option: 'CFTC', alias: 'CONN-TRD-01' }],
-    users: [user('alex.morgan', 'Alex Morgan', 'Trading'), user('riley.chen', 'Riley Chen', 'Trading Read Only'), user('desk.bot', 'Desk Bot', 'Drop Copy', 'Suspended')],
+    users: [
+      user('alex.morgan', 'Alex Morgan', 'Trading', 'Active', {
+        legalName: 'Alexandra Morgan', title: 'Head of Trading', employerName: 'Connamara Trading LLC', email: 'alex.morgan@example.com', phoneNumber: '+1 312 555 0187',
+        dateOfBirth: '1986-04-12', registrationNumber: 'REG-20431', oauthId: 'alex.morgan@connamara.example', address: '311 S Wacker Dr, Suite 2400\nChicago, IL 60606', submissionDate: '2026-02-03',
+        groupName: 'Desk A', aliases: [{ option: 'CFTC', alias: 'CT-AMORGAN' }], accounts: [{ id: 'CT-Main', capacity: 'Own Account' }, { id: 'CT-Prop', capacity: 'Proprietary Account' }],
+      }),
+      user('riley.chen', 'Riley Chen', 'Trading Read Only'),
+      user('desk.bot', 'Desk Bot', 'Drop Copy', 'Suspended'),
+    ],
     accounts: [
-      account('CT-Main', 'Customer', 'Connamara Clearing', { riskProfile: 'Standard', orderSizeLow: 1, orderSizeLowSet: true, orderSizeHigh: 500, orderSizeHighSet: true }),
-      account('CT-Prop', 'House Trader', 'Connamara Clearing', { collateralReturnEnabled: true, collateralAccount: 'CT-Main' }),
+      account('CT-Main', 'Customer', 'Connamara Clearing', {
+        riskProfile: 'Exchange Scoped', orderSizeLow: 1, orderSizeLowSet: true, orderSizeHigh: 500, orderSizeHighSet: true, priorityWeight: 2,
+        properties: ['Commission Tier 1'], mqpInterval: 5, mqpTradedQuantity: 250, clearingAccount: 'CLR-10042', positionAccount: 'POS-10042',
+        beneficialOwners: [{ legalName: 'Alexandra Morgan', title: 'Managing Member', employerName: 'Connamara Trading LLC', email: 'alex.morgan@example.com', cftcForm102Owner: true, cftcForm102Controller: true }],
+        aliases: [{ option: 'CFTC', alias: 'CT-MAIN-01' }],
+        commissions: [{ type: 'Basis Points', basisPoints: '2.5', makerBasisPoints: '1', roundingMethod: 'Banker', includeProperties: [], excludeProperties: [], sideOverride: 'Buy', symbolOverride: 'BTC-DEC26' }],
+        whitelist: { enabled: true, products: ['BTC', 'ETH'], symbols: [] },
+        associated: [{ firm: 'Connamara-Trading', id: 'CT-Prop' }],
+      }),
+      account('CT-Prop', 'House Trader', 'Connamara Clearing', { collateralReturnEnabled: true, collateralAccount: 'CT-Main', positionAccount: 'POS-10043' }),
     ],
     positions: [
       { account: 'CT-Main', symbol: 'BTC-DEC26', subType: 'Long', bod: 12, open: 18, bought: 9, sold: 3, unsettled: 6 },
@@ -85,7 +102,8 @@ const SAMPLE_ACCOUNT_TYPES = {
   clearingMember: ['Customer', 'Aggregated Multiple Customers', 'House Trader', 'Operating', 'Clearing Fund', 'Non Customer'],
   clearingHouse: ['Clearing Fund', 'Operating', 'House Trader', 'Customer', 'Aggregated Customer And Non Customer', 'Non Customer'],
 };
-const SAMPLE_RISK_PROFILES = ['Standard', '', 'Conservative', 'Aggressive'];
+const SAMPLE_RISK_PROFILES = ['Exchange Default', 'Exchange Scoped', 'Exchange Default', 'Symbol Scoped'];
+const SAMPLE_BANKS = [['CHASUS33', 'JPMorgan Chase Bank', 'New York', 'NY'], ['BOFAUS3N', 'Bank of America', 'Charlotte', 'NC'], ['071000013', 'BMO Harris Bank', 'Chicago', 'IL']];
 const SAMPLE_PRODUCTS = ['BTC', 'ETH', 'SOL', 'WTI', 'GC', 'ES'];
 const SAMPLE_SYMBOLS = ['BTC-DEC26', 'ETH-DEC26', 'SOL-MAR27', 'WTI-JAN27', 'GC-FEB27', 'ES-DEC26'];
 const SAMPLE_SERVICES = [['market-data-feed', 'Real-time market data'], ['risk-gateway', 'Pre-trade risk checks'], ['settlement-export', 'End-of-day settlement files'], ['position-sync', 'Position reconciliation'], ['audit-export', 'Audit trail export']];
@@ -151,6 +169,51 @@ function addAccounts(f, index, all) {
   });
 }
 
+function linkUserAccounts(f, index) {
+  const accounts = f.accounts.map(a => a.id);
+  if (!accounts.length) return;
+  f.users.filter(u => !String(u.role).toLowerCase().includes('admin')).forEach((u, i) => {
+    u.accounts = u.accounts || [];
+    if (u.accounts.length) return;
+    for (let n = 0; n <= (index + i) % 2; n += 1) {
+      const id = accounts[(i + n) % accounts.length];
+      if (!u.accounts.some(link => link.id === id)) u.accounts.push({ id, capacity: ORDER_CAPACITIES[(index + i + n) % ORDER_CAPACITIES.length] });
+    }
+    if (!u.email) u.email = `${u.id}@example.com`;
+  });
+}
+
+function sampleBank(f, a, n, type, isDefault) {
+  const [bankId, bankName, bankCity, bankState] = SAMPLE_BANKS[n % SAMPLE_BANKS.length];
+  return {
+    bankAccountType: type, isDefault, bankId, bankIdType: /^\d+$/.test(bankId) ? 'Fed' : 'Swift', accountTitle: `${a.displayName} ${type}`,
+    cashAccountNumber: String(4410000 + n * 37).padStart(10, '0'), beneficiaryName: f.legalName || f.name, bankName, bankCity, bankState, bankCountryCode: 'US',
+  };
+}
+
+function addAccountDetails(f, index) {
+  f.accounts.forEach((a, i) => {
+    const n = index * 5 + i;
+    if (!a.bankDetails.length) {
+      a.bankDetails.push(sampleBank(f, a, n, 'Settlement Bank', true));
+      if (n % 2) a.bankDetails.push(sampleBank(f, a, n + 1, 'Cash Withdrawal', true));
+    }
+    if (!a.properties.length && n % 3 === 0) a.properties.push(n % 2 ? 'Omnibus' : 'Commission Tier 2');
+    if (!a.positionAccount && tradesOnAccount(f)) a.positionAccount = `POS-${20000 + n}`;
+    if (!a.clearingAccount && n % 2 === 0) a.clearingAccount = `CLR-${30000 + n}`;
+    if (!a.beneficialOwners.length && n % 3 === 1) {
+      const name = SAMPLE_PEOPLE[n % SAMPLE_PEOPLE.length];
+      a.beneficialOwners.push({ legalName: name, title: 'Managing Member', email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`, cftcForm102Owner: true, cftcForm102Controller: n % 2 === 0 });
+    }
+    if (!a.commissions.length && n % 2 === 0) {
+      a.commissions.push({ type: n % 4 ? 'Basis Points' : 'Flat Fee', basisPoints: n % 4 ? String(1 + n % 3) : '', makerBasisPoints: '', flatFee: n % 4 ? '' : '0.25', makerFlatFee: '', roundingMethod: 'Banker', includeProperties: [], excludeProperties: [], blockTradeOverride: n % 3 === 0 });
+    }
+    if (!a.limits.length && n % 3 === 2) a.limits.push({ product: SAMPLE_PRODUCTS[n % SAMPLE_PRODUCTS.length], symbol: '', aggregated: false, shortPositionLimit: 100 + n * 10, longPositionLimit: 150 + n * 10 });
+    if (!a.whitelist) a.whitelist = { enabled: false, products: [], symbols: [] };
+    if (!a.associated.length && i === 0 && f.accounts[1]) a.associated.push({ firm: f.id, id: f.accounts[1].id });
+  });
+}
+
 function addPositions(f, index) {
   f.accounts.forEach((acct, i) => {
     if (f.positions.some(p => p.account === acct.id)) return;
@@ -213,6 +276,8 @@ function enrichFirms(all) {
     if (hasTab(f, 'accounts')) {
       addAccounts(f, index, all);
       addPositions(f, index);
+      linkUserAccounts(f, index);
+      addAccountDetails(f, index);
     }
     if (hasTab(f, 'position-limits')) addLimits(f, index);
     if (hasTab(f, 'services')) addServices(f, index);

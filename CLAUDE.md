@@ -24,7 +24,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `firm.html` | Firm profile and tabs | `id`, `tab` |
 | `firm-new.html` | Create a firm | `type` (optional preset) |
 | `firm-edit.html` | Edit a firm | `id` |
-| `user.html`, `account.html`, `service.html` | View, add or edit a record | `firm`, `id`, `mode=new\|edit` |
+| `user.html`, `account.html`, `service.html` | View, add or edit a record | `firm`, `id`, `mode=new\|edit`, `tab`, `asOf` (account positions) |
 | `api-keys.html` | A service's API keys | `firm`, `service` |
 | `api-key.html` | View, add or edit a key | `firm`, `service`, `id`, `mode=new\|edit` |
 | `instruments.html` | Instrument list and exchange-wide actions | |
@@ -35,7 +35,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `products.html`, `product.html` | Product list; view, add, edit or copy a product | `id`, `mode=new\|edit\|copy` |
 | `calendars.html` | Holiday calendars, agenda and week views | |
 
-`tab` is one of `users`, `accounts`, `position-limits`, `association` or `services`.
+On `firm.html`, `tab` is one of `users`, `accounts`, `position-limits`, `association` or `services`. On `user.html` it is `accounts`. On `account.html` it is `users`, `positions`, `balances`, `balance-ledger`, `position-ledger`, `whitelist`, `commissions`, `association`, `bank-accounts` or `position-limits`.
 
 | File in `assets/` | Purpose |
 |---|---|
@@ -46,6 +46,7 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `js/tooltip.js` | `tipHTML` and the tooltip bubble |
 | `js/filter-bar.js` | The list filter bar: search box, filter buttons and their popovers, `setListFilter`, `clearListFilters` |
 | `js/config.js` | Storage keys, firm types, field schema, tabs, associations, roles, record definitions, nav, `APP_INFO` |
+| `js/account-config.js` | Account tabs, form fields, bank account and beneficial ownership collections, commission fields, position and ledger columns. Loads before `seed.js` |
 | `js/seed.js` | Sample firms and the generator that fills their tabs |
 | `js/core.js` | Page and URL helpers, storage, state, `hrefFor`, `go`, flash toasts |
 | `js/ui.js` | Toasts, confirm dialog, menus, custom dropdowns |
@@ -55,7 +56,12 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 | `js/firms-list.js` | Firm list, filters, sorting, pagination, firm actions |
 | `js/firm-detail.js` | Firm header and tabs, profile, left section menu, shared read rows and collections |
 | `js/firm-tabs.js` | Users, Accounts, Position Limits, Associations and Services tab content |
-| `js/records.js` | User, account, service and API key pages |
+| `js/records.js` | Service and API key pages, the shared record form, `recordHeadHTML`, `recordProfileHTML`, `openCapacityPicker` |
+| `js/user-page.js` | User view page, its Accounts tab, tokens, Force Logoff, Remove MFA |
+| `js/account-page.js` | Account view page, tab routing (`ACCOUNT_VIEWS`), Users and Account Associations tabs, account validation and the state change confirm |
+| `js/account-money.js` | Positions (adjust, transfer, as of), Balances, withdrawals, pending credits, Balance and Position Ledgers |
+| `js/account-trading.js` | Whitelist and Commissions tabs |
+| `js/account-events.js` | Adds the account actions to `ACT`, and their listeners |
 | `js/firm-form.js` | Firm create and edit form, field rendering, validation, popup record forms |
 | `js/market-config.js` | Instruments module options, tooltips, field rules and `FIELD_DEFS`, `parseItem`, `resolveField` |
 | `js/market-sections.js` | Ordered section layouts per product type for instruments and products, filters, stats columns |
@@ -80,7 +86,8 @@ Each HTML file is a thin wrapper with `data-page` on `<body>`. All pages load th
 
 ## How the code works
 
-- **Plain scripts, not ES modules.** This keeps double-clicking `index.html` working. Top-level `const` and functions are shared between files, so script order matters only for code that runs at load. New script files must be added to all 21 HTML files.
+- **Plain scripts, not ES modules.** This keeps double-clicking `index.html` working. Top-level `const` and functions are shared between files, so script order matters only for code that runs at load. A table built at load, like `ACCOUNT_VIEWS`, must wrap functions from later files in arrows. Top-level names must be unique across all files. New script files must be added to all 21 HTML files.
+- **Record pages:** an entity in `ENTITIES` can define `head(f, rec)` so its edit page keeps the view page's header and tabs, `defaults(f)`, `validate(draft, f, mode)`, and `confirmSave(draft, original, mode)` that returns a promise. Fields can be `kind: 'head'` for a subheading or `kind: 'multi'` for chips. On a record view page, `pageRecord` is the record, so the collection add, edit and remove actions change it rather than the firm.
 - **Rendering:** pages render into `#view` from template strings. Always pass dynamic values through `esc()`.
 - **Actions:** add a `data-act` attribute and a matching entry in `ACT` in `events.js`, or in `market-events.js` for the instruments module.
 - **Dropdowns:** render a normal `<select>`. `enhanceSelects()` replaces it with the themed dropdown automatically.
@@ -132,6 +139,16 @@ Users and Accounts, from `pages/Users.js`, `pages/Accounts.js`, `UsersFilter.js`
 - **Filters:** Users have User ID, User State, User Role and Firm. Accounts have Account ID, Collateral Account, Account State and Firm. Both have Show Deleted.
 - **Delete** is a soft delete for users and accounts, from the lists, the firm tabs and the view page. Deleted records are hidden from firm tabs and dashboard counts, and their edit URL redirects to the view page, which offers Restore.
 
+User and account pages, from `UsersFormPage.js`, `UsersHeader.js`, `UsersFormViewEdit.js`, `AccountFormPage.js`, `AccountHeader.js`, `AccountForm.js` and the account tab components:
+
+- **User tabs:** User Profile, and Accounts unless the role is an admin role. The header offers Generate Registration Token, with Test Token, Force Logoff and Remove MFA in More.
+- **Account tabs:** Account Profile, Users, Positions, Balances, Ledger (Balance and Position sub-tabs), Whitelist, Commissions, Account Associations, Bank Accounts, Position Limits. Users and Whitelist only show for Participant and Clearing Member firms.
+- **Edit pages** keep the record's header and tabs, like the firm edit page.
+- **Account form order** follows `AccountForm.js`: Account Name, Account ID, Account Type, Priority Weight (a whole number, may be negative), the firm fields for the firm type, Collateral Account, Risk System, Risk Profile, Collateral Return, Properties, Account State, Mass Quote Protection (both or neither), Clearing Integration, Order Size Limits, then Beneficial Ownership and Aliases. The firm fields can't change after creation. Changing the state asks first, warning that Suspended and Liquidate Only remove working orders.
+- **Account users** are the user's account links, with a customer order capacity. Adding from either side updates the same link.
+- **Commissions:** Basis Points or Flat Fee. After creation only the rates, rounding and expiration change, and an expiration needs an override.
+- **Transfers** go to Participant firm accounts. Average Price Transfer and Give Up need an Allocation Group ID and Reference Trade IDs.
+
 Instruments module, from `pages/Instruments.js`, `InstrumentForm.js` and `ProductForm.js`:
 
 - **Tabs:** the Instruments sidebar item opens Products, Instruments and Calendars. Book and market stats pages keep the Instruments tab or link back to it.
@@ -179,7 +196,7 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 
 ## Not built yet
 
-- An account's own tabs: Users, Positions, Balances, Ledger, Whitelist, Commissions, Associations, Bank Accounts and Position Limits.
+- The Securities and Pending Security Withdrawals sections of an account's Balances tab.
 - Every sidebar page except Dashboard, Firms, Users, Accounts and Instruments, including Change Password. They show a "not part of this prototype" message.
 - The Properties filter on the Accounts list, because sample accounts have no properties.
 - Multi-factor enrollment on login and Single Sign On.
@@ -189,7 +206,9 @@ Keep these unless told otherwise. The user wants a simple admin tool, not a fanc
 ## Prototype-only behaviour
 
 - **Auto Reload Positions** only remembers its setting, because sample positions never change.
-- **Associations** save on one firm only and do not update the other firm.
+- **Associations** save on one firm only and do not update the other firm. Account associations also save on one account only.
+- **Account money:** balances, withdrawals, credits and ledgers are generated from the account ID the first time they're shown. Positions As Of shows the BOD position as the open position. Changes write ledger entries, but nothing is re-priced.
+- **Account state** saves with the rest of the form after the confirm. In the real app, changing the state applies at once and discards other edits.
 - **Version and license values** are samples in `APP_INFO`. In the real app they come from `REACT_APP_VERSION` and the license API.
 - **Logo** is a vector redraw from a screenshot, because the real file is not in either repo. Replace it in `sprite.js` when available.
 - **Calculate Dates** runs in the browser. It skips weekends but ignores holiday calendars and day conventions, where the real app calls a date service.

@@ -51,6 +51,7 @@ function readValue(x, f) {
 }
 
 function readRow(x, f) {
+  if (x.kind === 'head') return `<div class="row row-subhead"><h3 class="section-title">${esc(x.label)}${tipHTML(x.tip)}</h3></div>`;
   if (x.kind === 'toggle') {
     return `<div class="row row-toggle">
       <span class="row-label">${esc(x.label)}${tipHTML(x.tip, f)}</span>
@@ -65,11 +66,11 @@ function readRow(x, f) {
   </div>`;
 }
 
-function collectionHTML(key, rows, { editable, heading }) {
+function collectionHTML(key, rows, { editable, heading, tip }) {
   const c = COLLECTIONS[key];
   const columns = c.columns || [[c.primary, c.one]];
   const addBtn = editable ? `<button class="btn btn-tint" type="button" data-act="rec-add" data-col="${key}">${icon('plus')}Add ${esc(c.one)}</button>` : '';
-  const head = heading ? `<div class="section-head"><h2 class="section-title">${esc(c.title)}${tipHTML(c.tip)}</h2>${addBtn}</div>` : `<div class="section-head head-end">${addBtn}</div>`;
+  const head = heading ? `<div class="section-head"><h2 class="section-title">${esc(c.title)}${tipHTML(tip || c.tip)}</h2>${addBtn}</div>` : `<div class="section-head head-end">${addBtn}</div>`;
   const body = !rows.length
     ? `<div class="empty small"><p>${esc(c.empty)}</p></div>`
     : `<div class="table-scroll"><table class="tbl">

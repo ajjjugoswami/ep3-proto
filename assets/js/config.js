@@ -1,6 +1,6 @@
 'use strict';
 
-const STORE_KEY = 'ep3.firms.prototype.v3';
+const STORE_KEY = 'ep3.firms.prototype.v5';
 const SESSION_KEY = 'ep3.firms.prototype.session';
 const SIDE_KEY = 'ep3.firms.prototype.side';
 const THEME_KEY = 'ep3.firms.prototype.theme';
@@ -135,6 +135,7 @@ const ROLES_BY_TYPE = {
 };
 const ACCOUNT_TYPES = ['Customer', 'Non Customer', 'House Trader', 'Floor Trader', 'Non Customer Cross Margined', 'House Trader Cross Margined', 'Joint Back Office', 'Equities Specialist', 'Options Market Maker', 'Options Firm Account', 'Aggregated Customer And Non Customer', 'Aggregated Multiple Customers', 'Liquidity Provider', 'Operating', 'Clearing Fund', 'Futures Market Maker'];
 const ACCOUNT_STATES = ['Active', 'Suspended', 'Liquidate Only'];
+const ORDER_CAPACITIES = ['Own Account', 'Proprietary Account', 'Financial Advisor', 'Retail Customer', 'Other'];
 const firmNamesOfType = type => firms.filter(x => !x.deleted && x.type === type).map(x => x.name);
 const firmField = f => ({ k: '_firm', label: 'Firm', kind: 'static', value: f.name });
 
@@ -142,13 +143,26 @@ const ENTITIES = {
   users: {
     key: 'users', one: 'User', plural: 'Users', newSeg: 'new', bulk: true, title: r => r.displayName,
     columns: [['Name', r => r.displayName, { strong: true }], ['User ID', r => r.id, { mono: true, sec: true }], ['User Role', r => r.role], ['State', r => r.state, { pill: true }], ['Firm', (r, f) => f.name, { sec: true }]],
+    collections: [{ id: 'aliases', title: 'Aliases', collection: 'aliases', tip: TIPS.userAlias }],
+    head: (f, u) => userHeadHTML(f, u, null, true),
     fields: f => [
-      { k: 'id', label: 'User ID', req: true, mono: true, createOnly: true, help: 'It can’t be changed after the user is created.' },
       { k: 'displayName', label: 'User Name', req: true },
+      { k: 'id', label: 'User ID', req: true, mono: true, createOnly: true, help: 'User ID must be unique. It can’t be changed after the user is created.' },
       firmField(f),
       { k: 'role', label: 'Role', kind: 'select', options: ROLES_BY_TYPE[f.type] || [], blank: 'Choose a role', req: true },
-      { k: 'groupName', label: 'Group Name' },
-      { k: 'state', label: 'User State', kind: 'select', options: ['Active', 'Suspended'], def: 'Active' },
+      { k: 'legalName', label: 'Legal Name' },
+      { k: 'title', label: 'Title' },
+      { k: 'employerName', label: 'Employer Name' },
+      { k: 'email', label: 'Email', inputType: 'email', ph: 'name@example.com' },
+      { k: 'phoneNumber', label: 'Phone Number', inputType: 'tel', ph: '+1 312 555 0100' },
+      { k: 'dateOfBirth', label: 'Date of Birth', inputType: 'date', display: r => formatWhen(r.dateOfBirth || '') },
+      { k: 'registrationNumber', label: 'Registration Number', tip: TIPS.userRegistrationNumber },
+      { k: 'oauthId', label: 'OAuth ID', tip: TIPS.userOauthId },
+      { k: 'legalEntityIdentifier', label: 'Legal Entity Identifier', kind: 'textarea' },
+      { k: 'address', label: 'Address', kind: 'textarea' },
+      { k: 'submissionDate', label: 'Submission Date', inputType: 'date', display: r => formatWhen(r.submissionDate || '') },
+      { k: 'groupName', label: 'Group Name', createOnly: true },
+      { k: 'state', label: 'User State', kind: 'select', options: ['Active', 'Suspended'], def: 'Active', editOnly: true },
     ],
   },
   accounts: {
@@ -158,24 +172,15 @@ const ENTITIES = {
       ['Risk System', r => r.riskSystem], ['Risk Profile', r => r.riskProfile || 'N/A'], ['Collateral Return', r => (r.collateralReturnEnabled ? 'Enabled' : '')], ['Collateral Account', r => r.collateralAccount],
       ['State', r => r.state, { pill: true }], ['Order Size Lower Limit', r => r.orderSizeLow, { num: true }], ['Lower Limit Set', r => (r.orderSizeLowSet ? 'On' : 'Off')], ['Order Size Higher Limit', r => r.orderSizeHigh, { num: true }], ['Higher Limit Set', r => (r.orderSizeHighSet ? 'On' : 'Off')],
     ],
-    fields: f => [
-      { k: 'displayName', label: 'Account Name', req: true },
-      { k: 'id', label: 'Account ID', req: true, mono: true, createOnly: true, help: 'It can’t be changed after the account is created.' },
-      { k: 'accountType', label: 'Account Type', kind: 'select', options: ACCOUNT_TYPES, blank: 'Not set' },
-      { k: 'state', label: 'Account State', kind: 'select', options: ACCOUNT_STATES, def: 'Active' },
-      { k: '_firm', label: 'Participant Firm', kind: 'static', value: f.name },
-      { k: 'clearingMember', label: 'Clearing Member Firm', kind: 'select', options: firmNamesOfType('clearingMember'), blank: 'Choose a firm', req: true },
-      { k: 'clearingHouse', label: 'Clearing House', kind: 'select', options: firmNamesOfType('clearingHouse'), blank: 'Not set' },
-      { k: 'riskSystem', label: 'Risk System', kind: 'select', options: ['Default'], def: 'Default', tip: TIPS.riskSystem },
-      { k: 'riskProfile', label: 'Risk Profile', tip: TIPS.riskProfile },
-      { k: 'priorityWeight', label: 'Account Priority Weight', inputType: 'number', min: 0 },
-      { k: 'collateralAccount', label: 'Collateral Account', kind: 'select', options: liveRows('accounts', f).map(a => a.id), blank: 'Not set' },
-      { k: 'collateralReturnEnabled', label: 'Collateral Return Enabled', kind: 'toggle' },
-      { k: 'orderSizeLow', label: 'Order Size Lower Limit', inputType: 'number', min: 0 },
-      { k: 'orderSizeLowSet', label: 'Lower Limit Set', kind: 'toggle' },
-      { k: 'orderSizeHigh', label: 'Order Size Higher Limit', inputType: 'number', min: 0 },
-      { k: 'orderSizeHighSet', label: 'Higher Limit Set', kind: 'toggle' },
+    collections: [
+      { id: 'beneficialOwners', title: 'Beneficial Ownership', collection: 'beneficialOwners', tip: TIPS.beneficialOwnership },
+      { id: 'aliases', title: 'Aliases', collection: 'aliases', tip: TIPS.accountAlias },
     ],
+    defaults: f => accountDefaults(f),
+    fields: f => accountFields(f),
+    validate: (d, f) => validateAccount(d, f),
+    confirmSave: (d, original, mode) => confirmAccountState(d, original, mode),
+    head: (f, a) => accountHeadHTML(f, a, null, true),
   },
   services: {
     key: 'services', one: 'Firm Service', plural: 'Firm Services', newSeg: 'newService', title: r => r.id,

@@ -299,7 +299,18 @@ h1[tabindex="-1"]:focus-visible { outline: none; }
 .license-list dt { color: var(--ink-3); font-size: 13px; }
 .license-list dd { margin: 0; font-size: 13px; font-weight: 560; text-align: right; }
 .alert .alert-acts-single { grid-template-columns: minmax(0, 1fr); }
-.side-foot { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.alert .alert-acts-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.token-box { display: block; min-height: 92px; margin-top: 14px; resize: none; font-size: 12px; line-height: 1.5; word-break: break-all; text-align: left; }
+.firm-meta a { font-weight: 500; }
+.row-subhead { display: block; min-height: 0; padding: 16px 14px 8px; background: var(--table-head); }
+.row-subhead .section-title { font-size: 14px; }
+.sheet .card > .form-subhead { padding: 16px 14px 6px; }
+.banner.info { background: var(--info-bg); color: var(--info-ink); }
+.subtabs { display: flex; flex-wrap: wrap; gap: 2px; width: fit-content; max-width: 100%; margin-bottom: 14px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--seg-bg); }
+.subtabs a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 14px; border-radius: 8px; color: var(--ink-3); font-weight: 540; }
+.subtabs a:hover { color: var(--ink); }
+.subtabs a[aria-current="page"] { background: var(--surface); color: var(--ink); font-weight: 620; box-shadow: var(--shadow-1); }
+.section-count { margin-left: 6px; color: var(--ink-3); font-size: 13px; font-weight: 500; }.side-foot { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
 .appearance .side-label { padding-bottom: 7px; }
 .theme-seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 3px; border-radius: 12px; background: var(--seg-bg); border: 1px solid var(--line); }
 .theme-seg button { display: flex; align-items: center; justify-content: center; gap: 5px; min-height: 32px; padding: 0 4px; border-radius: 9px; color: var(--ink-2); font-size: 13px; font-weight: 500; white-space: nowrap; transition: background-color .14s, color .14s; }

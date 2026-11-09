@@ -55,6 +55,7 @@ const load = () => {
 
 let firms = load();
 let form = null;
+let pageRecord = null;
 let spy = null;
 let spyLock = 0;
 let assocState = null;

@@ -66,6 +66,8 @@ function fieldRow(x, values, errors, ctx) {
   </div>`;
 }
 
+const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+const EMAIL_ERROR = 'Enter an email address like name@example.com.';
 const leiWarn = v => !!v && (String(v).length !== 20 || !/^[A-Za-z0-9]+$/.test(v));
 const leiText = v => !v ? '' : leiWarn(v) ? `${String(v).length} of 20 characters, letters and numbers only` : '20 characters';
 
@@ -85,7 +87,11 @@ function startForm(mode, source, presetType) {
   renderFormShell();
 }
 
+const subheadHTML = x => `<div class="form-subhead"><h2 class="section-title">${esc(x.label)}${tipHTML(x.tip)}</h2></div>`;
+
 function formFieldRow(x, f) {
+  if (form.mode === 'create' && x.editOnly) return '';
+  if (x.kind === 'head') return subheadHTML(x);
   if (x.kind === 'static') return readRow(x, f);
   if (form.mode === 'edit' && x.createOnly) return readRow(x, f);
   if (x.kind === 'type') {
@@ -96,6 +102,7 @@ function formFieldRow(x, f) {
       help: 'Can’t be changed after the firm is created.',
     }, f, form.errors, 'firm');
   }
+  if (x.kind === 'multi') return multiRowHTML(x, f);
   return fieldRow(x, f, form.errors, 'firm');
 }
 
@@ -114,7 +121,7 @@ function formCollapseHTML(s) {
   const rows = form.draft[s.collection] || [];
   return `<details class="card form-collapse" data-sec="${s.id}" ${form.open.has(s.id) ? 'open' : ''}>
     <summary>
-      <span class="section-title">${esc(s.title)}${tipHTML(COLLECTIONS[s.collection].tip)}</span>
+      <span class="section-title">${esc(s.title)}${tipHTML(s.tip || COLLECTIONS[s.collection].tip)}</span>
       <span class="form-collapse-meta">${rows.length ? `<span>${rows.length}</span>` : ''}${icon('up')}</span>
     </summary>
     <div class="form-collapse-body">
@@ -127,7 +134,8 @@ function formBodyHTML() {
   const f = form.draft;
   if (form.module) return form.module.body();
   if (form.entity) {
-    return `<div class="card form-card"><div class="form-grid form-list">${form.entity.fields.map(x => formFieldRow(x, f)).join('')}</div></div>`;
+    return `<div class="card form-card"><div class="form-grid form-list">${form.entity.fields.map(x => formFieldRow(x, f)).join('')}</div></div>
+      ${(form.entity.collections || []).map(formCollapseHTML).join('')}`;
   }
   const rows = FIRM_FORM_ORDER.map(firmFieldByKey).filter(x => visible(x, f)).map(x => formFieldRow(x, f)).join('');
   const clearing = SECTIONS.find(s => s.id === 'clearing');
@@ -217,7 +225,7 @@ function validateFirm(f, mode) {
     if (!String(f.id || '').trim()) e.id = 'Enter a firm ID.';
     else if (firmById(f.id.trim())) e.id = 'Another firm already uses this ID. Enter a different one.';
   }
-  if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Enter an email address like name@example.com.';
+  if (f.email && !validEmail(f.email)) e.email = EMAIL_ERROR;
   return e;
 }
 
@@ -278,7 +286,13 @@ async function submitFirm() {
 
 function collectionTarget() {
   if (form) return form.draft;
-  return firmById(currentDetailId());
+  return pageRecord || firmById(currentDetailId());
+}
+
+function sheetFieldHTML(x, values, errors) {
+  if (x.kind === 'head') return subheadHTML(x);
+  if (x.kind === 'multi') return multiRowHTML(x, values, 'rec');
+  return fieldRow(x, values, errors, 'rec');
 }
 
 function openFormSheet({ title, submit, note, fields, values, validate, onSubmit, repaintOn = [], sync, extra }) {
@@ -299,7 +313,7 @@ function openFormSheet({ title, submit, note, fields, values, validate, onSubmit
       </div>
       <div class="sheet-body">
         ${note ? `<p class="sheet-note">${esc(note)}</p>` : ''}
-        <div class="card">${fieldList().map(x => fieldRow(x, values, errors, 'rec')).join('')}</div>
+        <div class="card">${fieldList().map(x => sheetFieldHTML(x, values, errors)).join('')}</div>
         ${extra ? extra(values) : ''}
       </div>
     </form>`;
@@ -312,6 +326,10 @@ function openFormSheet({ title, submit, note, fields, values, validate, onSubmit
       });
       if (sync) sync(values, d);
     };
+    $$('[data-multi]', d).forEach(box => box.addEventListener('change', () => {
+      const current = values[box.dataset.multi] || [];
+      values[box.dataset.multi] = box.checked ? [...current, box.value] : current.filter(v => v !== box.value);
+    }));
     $$('[data-field]', d).forEach(inp => {
       const update = () => { values[inp.dataset.field] = inp.type === 'checkbox' ? inp.checked : inp.value; applyLocks(); };
       inp.addEventListener('input', update);
@@ -333,7 +351,7 @@ function openFormSheet({ title, submit, note, fields, values, validate, onSubmit
     fieldList().forEach(x => {
       const v = values[x.k];
       if (x.req && !String(v ?? '').trim()) errors[x.k] = requiredMessage(x);
-      if (x.inputType === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) errors[x.k] = 'Enter an email address like name@example.com.';
+      if (x.inputType === 'email' && v && !validEmail(v)) errors[x.k] = EMAIL_ERROR;
       if (x.inputType === 'number' && v !== '' && v !== undefined && !(Number(v) >= 0)) errors[x.k] = `${x.label} must be 0 or more.`;
     });
     if (!Object.keys(errors).length && validate) errors = validate(values);
@@ -369,6 +387,7 @@ function openRecordSheet(key, index) {
     validate: c.validate,
     onSubmit: values => {
       if (editing) rows[index] = values; else rows.push(values);
+      if (c.afterSave) c.afterSave(rows, values);
       if (form) {
         refreshFormBody(`[data-act="rec-add"][data-col="${key}"]`);
         return;
@@ -393,7 +412,7 @@ async function removeRecord(key, index) {
     refreshFormBody(`[data-act="rec-add"][data-col="${key}"]`);
     return;
   }
-  const ok = await ask({ title: `Remove ${label}?`, text: `This removes it from ${owner.name}.`, confirm: 'Remove', danger: true, glyph: 'trash' });
+  const ok = await ask({ title: `Remove ${label}?`, text: `This removes it from ${owner.name || owner.displayName}.`, confirm: 'Remove', danger: true, glyph: 'trash' });
   if (!ok) return;
   rows.splice(index, 1);
   persist();

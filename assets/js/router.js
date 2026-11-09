@@ -25,6 +25,8 @@ function renderRecordPage(kind, f, sid) {
   }
   if (mode === 'edit' && rec.deleted) location.replace(entityHref(kind, f, sid, rec.id));
   else if (mode === 'edit') startEntityForm(kind, f, sid, rec);
+  else if (kind === 'users') renderUserPage(f, rec, param('tab'));
+  else if (kind === 'accounts') renderAccountPage(f, rec, param('tab'));
   else renderEntityView(kind, f, sid, rec);
 }
 

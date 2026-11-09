@@ -92,14 +92,14 @@ function accountsTabHTML(f) {
     </section>`;
 }
 
-function limitsTabHTML(f) {
+function limitsTabHTML(owner, editable = !owner.deleted) {
   return `<div class="filters">
       <label class="filter-field filter-search">
         <span>Filter</span>
         <div class="search">${icon('search')}<input class="field" id="limitFilter" type="search" placeholder="Product or symbol" autocomplete="off"></div>
       </label>
     </div>
-    <div id="limitsTab">${collectionHTML('limits', f.limits || [], { editable: !f.deleted })}</div>`;
+    <div id="limitsTab">${collectionHTML('limits', owner.limits || [], { editable })}</div>`;
 }
 
 function assocBox(f, key) {

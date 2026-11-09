@@ -72,6 +72,10 @@ const ACT = {
   },
   'ent-restore'(el) { restoreRecord(el.dataset.kind, firmById(el.dataset.firm), el.dataset.id); },
   'dir-new'(el) { openFirmPicker(el.dataset.kind); },
+  'user-reg-token'() { const { f, u } = currentUserRecord(); showUserToken(f, u, true); },
+  'user-menu'(el) { const { f, u } = currentUserRecord(); openMenu(el, userMenuItems(f, u, !param('tab'))); },
+  'user-acct-add'() { const { f, u } = currentUserRecord(); openLinkAccounts(f, u); },
+  'user-acct-remove'(el) { const { f, u } = currentUserRecord(); removeUserAccount(f, u, el.dataset.id); },
   'dir-row-menu'(el) { openMenu(el, directoryMenuItems(el.dataset.kind, el.dataset.firm, el.dataset.id)); },
   async 'ent-bulk'(el) {
     const { kind, state } = el.dataset;
@@ -198,6 +202,12 @@ document.addEventListener('change', e => {
     return;
   }
   if (!form || t.closest('#sheet')) return;
+  if (t.dataset.multi && form.entity) {
+    const current = getPath(form.draft, t.dataset.multi) || [];
+    setPath(form.draft, t.dataset.multi, t.checked ? [...current, t.value] : current.filter(v => v !== t.value));
+    updateDock();
+    return;
+  }
   if (!t.dataset.field) return;
   const k = t.dataset.field;
   if (t.type === 'checkbox') setPath(form.draft, k, t.checked);
