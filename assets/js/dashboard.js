@@ -33,10 +33,10 @@ function dashStats() {
     { key: 'firms', ic: 'building', label: 'Firms', value: live.length, href: 'firms.html',
       sub: `${countText(countWhere(live, f => f.state === 'active'))} active · ${countText(countWhere(live, f => f.state === 'suspended'))} suspended`,
       parts: stateParts(live, [['active', 'seg-ok'], ['suspended', 'seg-warn']], f => f.state) },
-    { key: 'users', ic: 'users', label: 'Users', value: users.length, href: 'users.html',
+    { key: 'users', ic: 'user', label: 'Users', value: users.length, href: 'users.html',
       sub: `${countText(countWhere(users, u => userState(u) === 'Active'))} active · ${countText(countWhere(users, u => userState(u) === 'Suspended'))} suspended`,
       parts: stateParts(users, [['Active', 'seg-ok'], ['Suspended', 'seg-warn']], userState) },
-    { key: 'accounts', ic: 'card', label: 'Accounts', value: accounts.length, href: 'accounts.html',
+    { key: 'accounts', ic: 'accounts', label: 'Accounts', value: accounts.length, href: 'accounts.html',
       sub: `${countText(countWhere(accounts, a => a.state === 'Active'))} active · ${countText(countWhere(accounts, a => a.state !== 'Active'))} restricted`,
       parts: stateParts(accounts, [['Active', 'seg-ok'], ['Suspended', 'seg-warn'], ['Liquidate Only', 'seg-bad']], a => a.state || 'Active') },
     { key: 'instruments', ic: 'list', label: 'Instruments', value: listed.length, href: 'instruments.html',
@@ -133,8 +133,8 @@ function attentionItems() {
     { ic: 'check', label: 'Settlement prices to approve', count: countWhere(insts, i => (i.stats || {}).settlementPreliminary), tone: 'Preopen', link: 'href="instruments.html" data-act="dash-approve"' },
     { ic: 'clock', label: 'Pending instruments', count: inState('Pending'), tone: 'Pending', link: filterLinkAttrs('instruments', 'state', 'Pending') },
     { ic: 'building', label: 'Suspended firms', count: countWhere(liveFirms(), f => f.state === 'suspended'), tone: 'Suspended', link: filterLinkAttrs('firms', 'state', 'suspended') },
-    { ic: 'users', label: 'Suspended users', count: countWhere(liveRecords('users'), u => u.state === 'Suspended'), tone: 'Suspended', link: filterLinkAttrs('users', 'state', 'Suspended') },
-    { ic: 'card', label: 'Liquidate only accounts', count: countWhere(liveRecords('accounts'), a => a.state === 'Liquidate Only'), tone: 'Suspended', link: filterLinkAttrs('accounts', 'state', 'Liquidate Only') },
+    { ic: 'user', label: 'Suspended users', count: countWhere(liveRecords('users'), u => u.state === 'Suspended'), tone: 'Suspended', link: filterLinkAttrs('users', 'state', 'Suspended') },
+    { ic: 'accounts', label: 'Liquidate only accounts', count: countWhere(liveRecords('accounts'), a => a.state === 'Liquidate Only'), tone: 'Suspended', link: filterLinkAttrs('accounts', 'state', 'Liquidate Only') },
   ].filter(item => item.count);
 }
 

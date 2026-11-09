@@ -1,13 +1,13 @@
 'use strict';
 
 function renderSidebar() {
-  const min = document.body.classList.contains('side-min');
+  const min = document.body.classList.contains('side-min') && !matchMedia('(max-width: 860px)').matches;
   const pref = themePref();
   const currentNav = NAV_FOR_PAGE[PAGE] || (MARKET_PAGES.includes(PAGE) ? 'instruments.html' : 'firms.html');
   $('#sidebar').innerHTML = `
     <div class="side-head">
-      <div class="brand">${logo('logo')}<div class="brand-text"><strong>Admin</strong><span>Connamara</span></div></div>
-      <button class="icon-btn" data-act="side-toggle" aria-label="${min ? 'Expand' : 'Collapse'} Navigation" title="${min ? 'Expand' : 'Collapse'} Navigation">${icon('sidebar')}</button>
+      <div class="brand">${logo('logo')}<strong class="brand-text">Admin Console</strong></div>
+      <button class="icon-btn side-toggle" data-act="side-toggle" aria-label="${min ? 'Expand' : 'Collapse'} Navigation" title="${min ? 'Expand' : 'Collapse'} Navigation">${icon(min ? 'side-open' : 'side-close')}</button>
     </div>
     <div class="side-scroll">
       ${NAV.map(g => `

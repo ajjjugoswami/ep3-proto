@@ -1,9 +1,12 @@
 :root {
   color-scheme: light;
   --shell: #FFFFFF;
-  --nav-active: rgba(16, 24, 40, .065);
-  --nav-icon: #2563C4;
-  --nav-icon-active: #4C8A12;
+  --nav-active: rgba(16, 24, 40, .045);
+  --nav-icon: #667085;
+  --nav-ink: #344054;
+  --nav-label: #98A2B3;
+  --nav-selected-bg: #EFF6FF;
+  --nav-selected-ink: #1D4ED8;
   --logoff: #B91C1C;
   --logoff-bg: rgba(185, 28, 28, .07);
   --logoff-bg-hover: rgba(185, 28, 28, .13);
@@ -83,9 +86,12 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --shell: #0A1222;
-  --nav-active: rgba(140, 172, 232, .13);
-  --nav-icon: #7DB6EC;
-  --nav-icon-active: #B9DD62;
+  --nav-active: rgba(140, 172, 232, .09);
+  --nav-icon: #93A0B8;
+  --nav-ink: #C9D2E1;
+  --nav-label: #74829C;
+  --nav-selected-bg: rgba(91, 147, 230, .16);
+  --nav-selected-ink: #9CC8F4;
   --logoff: #F87171;
   --logoff-bg: rgba(248, 113, 113, .1);
   --logoff-bg-hover: rgba(248, 113, 113, .18);
@@ -277,26 +283,29 @@ h1[tabindex="-1"]:focus-visible { outline: none; }
   overflow: hidden;
   transition: width .32s var(--ease), transform .32s var(--ease);
 }
-.side-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 46px; padding: 0 0 0 6px; }
-.brand { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.logo { display: block; width: 69px; height: 40px; flex: none; }
-.brand-text { min-width: 0; line-height: 1.2; white-space: nowrap; }
-.brand-text strong { display: block; font-size: 13px; font-weight: 650; }
-.brand-text span { display: block; font-size: 11.5px; color: var(--ink-3); }
-.side-scroll { flex: 1; min-height: 0; margin: 6px -4px 0; padding: 0 4px 8px; overflow: hidden auto; }
-.side-group { margin-top: 14px; }
-.side-label { padding: 0 11px 5px; font-size: 12.5px; font-weight: 500; color: var(--ink-3); white-space: nowrap; }
+.side-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 46px; padding: 0 0 0 8px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo { display: block; width: 50px; height: 29px; flex: none; }
+.brand-text { min-width: 0; overflow: hidden; color: var(--title); font: 650 16px/1.2 var(--display); letter-spacing: -.01em; white-space: nowrap; text-overflow: ellipsis; }
+.side-toggle { width: 32px; height: 32px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--nav-icon); }
+.side-toggle .i { width: 17px; height: 17px; }
+.side-toggle:hover { color: var(--ink); }
+.side-scroll { flex: 1; min-height: 0; margin: 8px -4px 0; padding: 0 4px 8px; overflow: hidden auto; }
+.side-group { margin-top: 18px; }
+.side-group:first-child { margin-top: 12px; }
+.side-label { padding: 0 12px 7px; font-size: 11.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--nav-label); white-space: nowrap; }
 .nav-item {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 36px; padding: 6px 11px; margin-bottom: 1px;
-  border-radius: 9px; color: var(--ink); font-size: 14.5px; font-weight: 500; text-align: left; white-space: nowrap;
+  display: flex; align-items: center; gap: 13px; width: 100%; min-height: 40px; padding: 8px 12px; margin-bottom: 2px;
+  border-radius: 8px; color: var(--nav-ink); font-size: 14.5px; font-weight: 500; text-align: left; white-space: nowrap;
   transition: background-color .14s, color .14s;
 }
-.nav-item .i { width: 21px; height: 21px; color: var(--nav-icon); }
-.nav-item:hover { background: var(--nav-active); }
-.nav-item[aria-current="page"] { background: var(--nav-active); font-weight: 650; }
-.nav-item[aria-current="page"] .i { color: var(--nav-icon-active); stroke-width: 2.1; }
-.btn-logoff { justify-content: flex-start; gap: 12px; min-height: 38px; padding: 0 11px; border-radius: 10px; background: var(--logoff-bg); color: var(--logoff); }
-.btn-logoff .i { width: 21px; height: 21px; }
+.nav-item .i { width: 22px; height: 22px; color: var(--nav-icon); stroke-width: 1.6; transition: color .14s; }
+.nav-item:hover { background: var(--nav-active); color: var(--ink); }
+.nav-item:hover .i { color: var(--nav-ink); }
+.nav-item[aria-current="page"] { background: var(--nav-selected-bg); color: var(--nav-selected-ink); font-weight: 600; }
+.nav-item[aria-current="page"] .i { color: var(--nav-selected-ink); stroke-width: 1.9; }
+.btn-logoff { justify-content: flex-start; gap: 13px; min-height: 40px; padding: 0 12px; border-radius: 8px; background: var(--logoff-bg); color: var(--logoff); }
+.btn-logoff .i { width: 22px; height: 22px; stroke-width: 1.6; }
 .btn-logoff:hover { background: var(--logoff-bg-hover); }
 .nav-sub { display: block; color: var(--ink-3); font-size: 11.5px; font-weight: 400; line-height: 1.3; }
 .side-info { display: grid; gap: 1px; padding: 2px 11px 0; color: var(--ink-3); font-size: 11.5px; line-height: 1.35; text-align: left; }

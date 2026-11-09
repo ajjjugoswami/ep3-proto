@@ -207,10 +207,10 @@ const ENTITIES = {
 
 const NAV = [
   { label: 'Overview', items: [['Dashboard', 'dashboard', 'dashboard.html']] },
-  { label: 'Directory', items: [['Firms', 'building', 'firms.html'], ['Users', 'users', 'users.html'], ['Accounts', 'card', 'accounts.html'], ['Groups', 'group']] },
-  { label: 'Markets', items: [['Instruments', 'list', 'instruments.html'], ['Time & Sales', 'calendar'], ['Order Search', 'search'], ['RFQ Search', 'quote']] },
-  { label: 'Operations', items: [['Admin Requests', 'check'], ['Jobs', 'terminal'], ['Alerts', 'bell']] },
-  { label: 'Account', items: [['Change Password', 'shield'], ['License', 'seal', false, 'license']] },
+  { label: 'Directory', items: [['Firms', 'building', 'firms.html'], ['Users', 'user', 'users.html'], ['Accounts', 'accounts', 'accounts.html'], ['Groups', 'users']] },
+  { label: 'Markets', items: [['Instruments', 'list', 'instruments.html'], ['Time & Sales', 'clock'], ['Order Search', 'search'], ['RFQ Search', 'quote']] },
+  { label: 'Operations', items: [['Admin Requests', 'requests'], ['Jobs', 'jobs'], ['Alerts', 'bell']] },
+  { label: 'Account', items: [['Change Password', 'lock'], ['License', 'seal', false, 'license']] },
 ];
 const NAV_FOR_PAGE = { dashboard: 'dashboard.html', users: 'users.html', accounts: 'accounts.html' };
 const MARKET_PAGES = ['instruments', 'instrument', 'instrument-stats', 'instrument-history', 'books', 'products', 'product', 'calendars'];
