@@ -171,10 +171,10 @@ const INSTRUMENT_SEARCH = { k: 'id', label: 'Instrument ID (Symbol)', ph: 'Find 
 const INSTRUMENT_FILTERS = [
   { k: 'productName', label: 'Product Name (ID)', short: 'Product', options: () => market.products.map(p => p.id) },
   { k: 'state', label: 'Instrument State', short: 'State', options: INST_STATES },
-  { k: 'type', label: 'Instrument Type', short: 'Type', options: PRODUCT_TYPES },
+  { k: 'type', label: 'Instrument Type', short: 'Type', options: PRODUCT_TYPES, more: true },
   { k: 'isScheduled', label: 'Schedule State', short: 'Schedule', options: OPT.scheduleFilter },
   { k: 'isTradable', label: 'Tradable', options: OPT.tradableFilter },
-  { k: 'hasLegs', label: 'Has Legs', short: 'Legs', options: OPT.legsFilter },
+  { k: 'hasLegs', label: 'Has Legs', short: 'Legs', options: OPT.legsFilter, more: true },
   { k: 'tradeDate', label: 'Trade Date', date: true, irs: true, when: irsOnly },
   { k: 'clearingHouse', label: 'Clearing House', options: clearingHouseNames, irs: true, when: irsOnly },
   { k: 'basecurrency', label: 'Currency', options: OPT.currency, irs: true, when: irsOnly },

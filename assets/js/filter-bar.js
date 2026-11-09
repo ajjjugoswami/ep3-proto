@@ -23,20 +23,54 @@ function filterValueLabel(x) {
   return value;
 }
 
+const FILTER_INLINE_MAX = 4;
+
+function filterGroups() {
+  const shown = shownListFilters();
+  const inline = shown.filter(x => !x.more).slice(0, FILTER_INLINE_MAX);
+  return { inline, more: shown.filter(x => !inline.includes(x)) };
+}
+
+function filterIdleLabel(x) {
+  const name = x.short || x.label;
+  return x.options && filterOptionsOf(x).length <= 2 ? `${name}: All` : name;
+}
+
 function filterButtonHTML(x) {
   const name = x.short || x.label;
   const value = filterValueLabel(x);
-  const popup = x.options ? 'listbox' : 'dialog';
+  const attrs = `type="button" data-act="fb-open" data-k="${x.k}" aria-haspopup="${x.options ? 'listbox' : 'dialog'}" aria-expanded="false"`;
   if (!value) {
-    return `<button class="fb" type="button" data-act="fb-open" data-k="${x.k}" aria-haspopup="${popup}" aria-expanded="false" aria-label="Filter by ${esc(x.label)}">${icon('plus')}${esc(name)}</button>`;
+    return `<button class="fb" ${attrs} aria-label="Filter by ${esc(x.label)}"><span class="fb-text">${esc(filterIdleLabel(x))}</span>${icon('down')}</button>`;
   }
-  return `<span class="fb-group">
-    <button class="fb fb-on" type="button" data-act="fb-open" data-k="${x.k}" aria-haspopup="${popup}" aria-expanded="false" aria-label="${esc(x.label)}: ${esc(value)}. Change filter">${esc(name)}<span class="fb-value" title="${esc(value)}">${esc(value)}</span></button>
-    <button class="fb-x" type="button" data-act="filter-remove" data-key="${x.k}" aria-label="Remove ${esc(x.label)} filter" title="Remove filter">${icon('x')}</button>
-  </span>`;
+  return `<button class="fb fb-on" ${attrs} aria-label="${esc(x.label)}: ${esc(value)}. Change filter"><span class="fb-tag" aria-hidden="true">${esc(name)}</span><span class="fb-value" title="${esc(value)}">${esc(value)}</span>${icon('down')}</button>`;
 }
 
-const filterButtonsHTML = () => `${shownListFilters().map(filterButtonHTML).join('')}${anyListFilter() ? '<button class="fb-clear" type="button" data-act="fb-clear">Clear all</button>' : ''}`;
+function filterToolsHTML(more) {
+  const open = !!listCtl.state.moreFilters;
+  const hiddenSet = more.filter(x => hasFilterValue(x.k)).length;
+  const moreBtn = more.length
+    ? `<button class="fb fb-tool" type="button" data-act="fb-more" aria-expanded="${open}">${icon('filter')}Filters${hiddenSet ? `<span class="fb-count" aria-label="${hiddenSet} set">${hiddenSet}</span>` : ''}</button>`
+    : '';
+  return `${moreBtn}<button class="fb fb-tool" type="button" data-act="fb-clear" ${anyListFilter() ? '' : 'disabled'}>${icon('restore')}Reset</button>`;
+}
+
+function filterButtonsHTML() {
+  const { inline, more } = filterGroups();
+  return `${inline.map(filterButtonHTML).join('')}${filterToolsHTML(more)}`;
+}
+
+function moreFiltersHTML() {
+  const { more } = filterGroups();
+  return more.length && listCtl.state.moreFilters ? more.map(filterButtonHTML).join('') : '';
+}
+
+function toggleMoreFilters() {
+  listCtl.state.moreFilters = !listCtl.state.moreFilters;
+  refreshFilterBar();
+  const btn = $('[data-act="fb-more"]');
+  if (btn) btn.focus();
+}
 
 function filterBarHTML(end = '') {
   const { search, state, noun } = listCtl;
@@ -49,12 +83,15 @@ function filterBarHTML(end = '') {
     </div>
     <div class="fbar-filters" id="fbarFilters">${filterButtonsHTML()}</div>
     ${end ? `<div class="fbar-end">${end}</div>` : ''}
+    <div class="fbar-more" id="fbarMore" role="group" aria-label="More filters">${moreFiltersHTML()}</div>
   </div>`;
 }
 
 function refreshFilterBar() {
   const box = $('#fbarFilters');
   if (box) box.innerHTML = filterButtonsHTML();
+  const more = $('#fbarMore');
+  if (more) more.innerHTML = moreFiltersHTML();
   if (openFilter) {
     const btn = filterButtonFor(openFilter.key);
     if (btn) { btn.setAttribute('aria-expanded', 'true'); openFilter.btn = btn; }
@@ -81,13 +118,6 @@ function onSearchInput(input) {
 function commitSearch(input) {
   input.classList.remove('is-pending');
   setListFilter(input.dataset.fbSearch, input.value.trim());
-}
-
-function removeListFilter(key) {
-  closeFilterPop(false);
-  setListFilter(key, '');
-  const next = filterButtonFor(key) || $('[data-fb-search]');
-  if (next) next.focus();
 }
 
 function clearListFilters() {
@@ -128,7 +158,8 @@ function optionRowsHTML(options, value, needle) {
   const shown = matches.slice(0, FILTER_OPTION_LIMIT);
   const selected = !needle && options.find(o => o.value === value);
   if (selected && !shown.includes(selected)) shown.unshift(selected);
-  const rows = shown.map(o => `<button class="fb-opt" type="button" role="option" aria-selected="${o.value === value}" data-v="${esc(o.value)}"><span>${esc(o.label)}</span>${icon('check')}</button>`).join('');
+  const optRow = (v, label, on) => `<button class="fb-opt" type="button" role="option" aria-selected="${on}" data-v="${esc(v)}"><span>${esc(label)}</span>${icon('check')}</button>`;
+  const rows = (needle ? '' : optRow('', 'All', !value)) + shown.map(o => optRow(o.value, o.label, o.value === value)).join('');
   const note = !matches.length ? 'No matches.'
     : matches.length > shown.length ? `Showing ${shown.length} of ${matches.length.toLocaleString('en-US')}. Type to narrow the list.` : '';
   return { rows, note };

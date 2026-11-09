@@ -17,8 +17,7 @@ const ACT = {
   tip(el) { showTip(el); },
   'fb-open'(el) { openFilterPop(el); },
   'fb-clear'() { clearListFilters(); },
-  'filter-remove'(el) { removeListFilter(el.dataset.key); },
-  'page-to'(el) {
+  'fb-more'() { toggleMoreFilters(); },  'page-to'(el) {
     listCtl.state.page = Number(el.dataset.p);
     listCtl.refresh();
     scrollListToTop();
